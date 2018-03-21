@@ -1,0 +1,27 @@
+package control;
+
+import model.Action;
+import model.KI;
+import model.Spielzustand;
+import model.KI.DefaultPossibleMoveGenerator;
+import model.KI.PossibleActionGenerator;
+
+public class KIController {
+
+	private KI ki;
+	
+	private PossibleActionGenerator actionGenerator;
+	
+	public KIController(MasterController masterController) {
+		actionGenerator = new DefaultPossibleMoveGenerator(ki, masterController.getAuswahlController());
+	}
+
+	public final void setKi(KI ki) {
+		this.ki = ki;
+	}
+
+	public Action tippHolen(Spielzustand spiel) {
+		return ki.getAction(KI.DefaultValueFunction, actionGenerator, KI.DefaultRisikoFunction, spiel);
+	}
+
+}

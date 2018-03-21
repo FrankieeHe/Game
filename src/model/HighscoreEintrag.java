@@ -1,0 +1,95 @@
+package model;
+
+import java.io.Serializable;
+
+/**
+ * Der Highscore ist eine Liste von Highscoreeinträgen, in der die besten Spieler ihrer in einer Spielparie erreichten Höchstpunktzahl absteigend sortiert werden.<br>
+ * Der Highscore-Eintrag ist also ein Element dieser Liste und enthält den Namen des Spielers sowie die Rundenanzahl und Erfahrungspunkte, die er in dem jeweiligen Spiel erreicht hat.<br>
+ * <br>
+ * Falls min. 1 Spieler während einer Spielrunde "gecheatet" hat (Undo, Redo, Tipps geben), wird kein Eintrag in der Liste vorgenommen.<br>
+ * Ein HighscoreEintrag wird also nur für Spiele erstellt, in denen nicht geschummelt wurde. 
+ * @author Pascal
+ *
+ */
+public class HighscoreEintrag implements Serializable{
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4272239324430756104L;
+
+	private static final double BEWERTUNGSKOEFFIZIENT = 1;
+
+	private String name;
+
+	private int rundenanzahl;
+
+	private int erfahrungspunkte;
+
+	//private DungeonRoll dungeonRoll;
+	
+	public HighscoreEintrag(String name, int rundenanzahl, int erfahrungspunkte) {
+		this.name = name;
+		this.rundenanzahl = rundenanzahl;
+		this.erfahrungspunkte = erfahrungspunkte;
+	}
+	
+	/**
+	 * Vergleicht diesen Eintrag mit dem übergebenen Anderen anhand der Bewertung
+	 * @param other der Eintrag mit dem dieser verglichen werden soll
+	 * @return <b>-1</b> falls die Bewertung dieses Eintrags niedriger ist als die des Anderen<br>
+	 * <b>1</b> falls die Bewertung dieses Eintrags höher ist als die des Anderen<br>
+	 * <b>0</b> sonst
+	 */
+	public int compareTo(HighscoreEintrag other) {
+		if (this.getBewertung() < other.getBewertung()) {
+			return -1;
+		}
+		else if (this.getBewertung() > other.getBewertung()) {
+			return 1;
+		}
+		
+		return 0;
+	}
+	
+	/**
+	 * Errechnet die Bewertung anhand der Erfahrungspunkte und Rundenanzahl.<br>
+	 * 
+	 * @return <b>0</b> falls keine einzige Runde gespielt wurde<br>
+	 * <b>Erfahrungspunkte * Koeffizient / Rundenanzahl</b> sonst
+	 */
+	public double getBewertung() {
+		return rundenanzahl != 0 ? erfahrungspunkte * BEWERTUNGSKOEFFIZIENT / rundenanzahl : 0;
+	}
+
+	/**
+	 * Gibt den Namen des Spielers zurück, dem dieser Eintrag gehört.
+	 * @return
+	 */
+	public final String getName() {
+		return name;
+	}
+
+	/**
+	 * Gibt die Anzahl der Runden an, die als Maximum in dem jeweiligen Spiel festgelegt wurde.
+	 */
+	public final int getRundenanzahl() {
+		return rundenanzahl;
+	}
+
+	/**
+	 * Gibt die Anzahl der Erfahrungspunkte zurück, die der Spieler in dem Spiel erreicht hat, aus dem dieser Eintrag entstand.
+	 * @return
+	 */
+	public final int getErfahrungspunkte() {
+		return erfahrungspunkte;
+	}
+
+	@Override
+	public String toString() {
+		return "HighscoreEintrag [name=" + name + ", rundenanzahl=" + rundenanzahl + ", erfahrungspunkte="
+				+ erfahrungspunkte + "]";
+	}
+	
+	
+}

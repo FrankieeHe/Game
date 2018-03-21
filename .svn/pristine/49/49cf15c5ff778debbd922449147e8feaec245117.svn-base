@@ -1,0 +1,307 @@
+package control;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import model.Abenteuer;
+import model.Heldtyp;
+import model.Phase;
+import model.Schatz;
+import model.SchwarzeWuerfelseite;
+import model.SpielerWerte;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+
+/**
+ * Der Controller fuer das Abenteuer
+ * 
+ * @author Dong
+ *
+ */
+public class AbenteuerController {
+	private Abenteuer abenteuer;
+	/**
+	 * MasterController des Projektes. Mit Hilfe von MasterController bekommt
+	 * AbenteuerController Zugriff zu DungeonRoll und anderen Controllers.
+	 */
+	private MasterController masterController;
+
+	/**
+	 * Konstruktor, produziert eine AbenteuerController.
+	 * 
+	 * @param masterController
+	 *            MasterController des Projektes.
+	 */
+	public AbenteuerController(MasterController masterController) {
+		this.masterController = masterController;
+	}
+
+	/**
+	 * Ein neues Abenteuer zu erstellen und anfang.
+	 */
+	public void neuesAbenteuerErstellen() {
+		this.abenteuer = this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer();
+		if (this.abenteuer == null) {
+			this.abenteuer = new Abenteuer();
+			this.abenteuer.setPhase(Phase.WUERFELPHASE);
+			this.abenteuer.setDrachen(new ArrayList<Wuerfel>());
+			this.abenteuer.setFriedhof(new ArrayList<Wuerfel>());
+			this.abenteuer.setGefaehrten(new ArrayList<Wuerfel>());
+			this.abenteuer.setLevel(1);
+			
+			this.abenteuer.setSpielerWerte(new SpielerWerte());
+			this.abenteuer.getSpielerWerte().setErfahrungspunkte(0);
+			this.abenteuer.setDungeon(new ArrayList<Wuerfel>());
+			this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getSpielerWerte().setSchaetze(new ArrayList<Schatz>());
+			this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+					.setUltimativeEingesetzt(false);
+			this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(this.abenteuer);
+			this.phaseWechseln();
+			return;
+			
+		}
+
+		// New abenteuer fangt in WUERFELPHASE an
+		if (this.abenteuer.getPhase() != Phase.WUERFELPHASE) {
+			// System.err.println("nicht richtig beenden");
+			this.abenteuer.setPhase(Phase.WUERFELPHASE);
+		}
+		if (this.abenteuer.getDrachen().size() > 0 || this.abenteuer.getDungeon().size() > 0
+				|| this.abenteuer.getFriedhof().size() > 0 || this.abenteuer.getGefaehrten().size() > 0) {
+			this.abenteuer.getDrachen().clear();
+			this.abenteuer.getDungeon().clear();
+			this.abenteuer.getFriedhof().clear();
+			this.abenteuer.getGefaehrten().clear();
+
+		}
+		// sichern die akteuller spielende Spieler
+		int spielerIndex = this.masterController.getDungeonRoll().getAktuellerZustand().getSpielerIndex();
+		int rundeIndex = this.masterController.getDungeonRoll().getAktuellerZustand().getRunde();
+		int maxRund = this.masterController.getDungeonRoll().getAktuellerZustand().getMaxRunde();
+		int spielers = this.masterController.getDungeonRoll().getAktuellerZustand().getSpieler().size();
+		if (rundeIndex * spielers + spielerIndex > (maxRund + 1) * spielers) {
+			this.masterController.spielBeenden();
+		}
+		this.masterController.getDungeonRoll().getAktuellerZustand().setRunde(rundeIndex + 1);
+		this.masterController.getDungeonRoll().getAktuellerZustand().setSpielerIndex(spielerIndex + 1);
+
+		// neu Abenteuer muss erst die List vom Gruppewuerfel erstellen
+		// init fuer die Gefarhtegruppe
+		int anzahlWeisseW = 7;
+		this.abenteuer.setLevel(1);
+		anzahlWeisseW = this.abenteuer.getLevel();
+		List<Wuerfel> weissWurfel = new ArrayList<Wuerfel>();
+		for (int i = 0; i < anzahlWeisseW; i++) {
+			Wuerfel w = new Wuerfel(true);
+			weissWurfel.add(w);
+		}
+		this.masterController.getWuerfelController().wuerfeln(weissWurfel);
+
+		// falls SOELDNERKOMMANDANT in Spielen, wird alles Spruchrolle sofort
+		// als
+		// Champions werden
+		if (this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().getHeldtyp()
+				.equals(Heldtyp.RITTERDRACHENTOETER)) {
+			for (Wuerfel w : weissWurfel) {
+				if (w.getWeisseWuerfelseite().equals(WeisseWuerfelseite.SPRUCHROLLE)) {
+					w.setWeisseWuerfelseite(WeisseWuerfelseite.CHAMPION);
+				}
+			}
+		}
+		// setze das Spielfeld an
+		this.abenteuer.setGefaehrten(weissWurfel);
+		this.abenteuer.setDungeon(new ArrayList<Wuerfel>());
+		this.abenteuer.setFriedhof(new ArrayList<Wuerfel>());
+		this.abenteuer.getSpielerWerte().setErfahrungspunkte(0);
+
+		this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+				.setUltimativeEingesetzt(false);
+		this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(this.abenteuer);
+
+		// automatisch in KampfenPhase geleitet
+		this.phaseWechseln();
+	}
+
+	/**
+	 * Akteueres Abenteuer zu beenden. Der bisher geschafft Erfahrungpunkt wird
+	 * berechnet und die Ultimative Faehigkeit des Helds rueckgesetzt. Der
+	 * Spieler sitzt in Ruhe. Der Spielzustand wird am Ende gespeichert.
+	 */
+	public void abenteuerBeenden() {
+		// falls nicht in der richtigen Phase bekommt der Spieler kein
+		// Erfahrungspunkt
+		if (!this.abenteuer.getPhase().equals(Phase.UMGRUPPIERUNGSPHASE)) {
+			this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(this.abenteuer);
+			// this.masterController.getSpeicherController().spielSpeichern();
+			this.abenteuer = null;
+			return;
+		}
+
+		// hat alle Monster am Leben besiegt
+		int level = this.abenteuer.getLevel();
+		int erfahrungspunkte = this.abenteuer.getSpielerWerte().getErfahrungspunkte();
+		List<Schatz> schaetzen = this.masterController.getDungeonRoll().getAktuellerZustand().getSchaetze();
+		int shatzValue = schaetzen.size();
+		for (Schatz s : schaetzen) {
+			if (Schatz.STADTPORTAL.equals(s)) {
+				shatzValue++;
+			}
+		}
+		//fuer Ende einer Abenteuer der alle bekommten Erfahrungspunkte , Schatze, Level zu zeigen
+		this.abenteuer.getSpielerWerte().setErfahrungspunkte(erfahrungspunkte + level + shatzValue);
+		//fuer Ende einer Abenteuer der bekommten Erfahrungspunkte zu Spieler geben
+		this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getSpielerWerte().setErfahrungspunkte(erfahrungspunkte);
+
+		// aktuell Abenteuer endet, das Abenteuer in Zustandspeichen zu
+		// speichern
+		this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(this.abenteuer);
+		// this.masterController.getSpeicherController().spielSpeichern();
+		this.abenteuer = null;
+	}
+
+	/**
+	 * welchseln der Spiel in naechsten Level. Nur Dungeon Wuerfel wird in
+	 * Anzahl von neuem Level gewuerfelt. aktuellePhase wird auf WUERFELPHASE
+	 * gesetzt
+	 */
+	public void naechstesLevel() {
+		if (this.abenteuer.getPhase() != Phase.WUERFELPHASE) {
+			System.err.println("Nur in WUERFELPHASE the next level anfangen kann");
+			return;
+		}
+		int aktueLevel = this.abenteuer.getLevel() + 1;
+		this.abenteuer.setLevel(aktueLevel);
+		if (aktueLevel >= 5) {
+			this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().setLevelUp(true);
+			this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+					.setUltimativeEingesetzt(false);
+		}
+		// zu next Phase wechseln, sgn Wurfelpahse
+		// wie ist hier zu wuerfeln
+		this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(this.abenteuer);
+		phaseWechseln();
+
+	}
+
+	/**
+	 * welchseln die aktuellePhase des Spiels in naechste Phase. die Reinfolge
+	 * von Phase ist allgemein im Zyklus als WUEFELPHASE,KAMPFPHASE,
+	 * PLUENDERPHASE, DRACHENPHASE, UMGRUPPIERUNGSPHASE
+	 */
+	public void phaseWechseln() {
+		switch (this.abenteuer.getPhase()) {
+		case WUERFELPHASE:
+			// die Dungeonwurfel werden ernuert gewuerfelt
+			this.abenteuer.getDungeon().clear();
+
+			// init the neu wurfel List mit den vorhandenen Wuerfel
+			List<Wuerfel> dungeonWuerfel = new ArrayList<Wuerfel>();
+			int anzahlDW = 7 - this.abenteuer.getDrachen().size();
+			if (anzahlDW > this.abenteuer.getLevel()) {
+				anzahlDW = this.abenteuer.getLevel();
+			}
+
+			for (int i = 0; i < anzahlDW; i++) {
+				Wuerfel w = new Wuerfel(false);
+				dungeonWuerfel.add(w);
+			}
+			this.masterController.getWuerfelController().wuerfeln(dungeonWuerfel);
+			List<Wuerfel> drachens = dungeonWuerfel.stream().filter(dra -> dra.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.DRACHENKOPF)).collect(Collectors.toList());
+			dungeonWuerfel.removeAll(drachens);
+			this.abenteuer.setDrachen(drachens);
+			this.abenteuer.setDungeon(dungeonWuerfel);
+			this.abenteuer.setPhase(Phase.KAMPFPHASE);
+			this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(this.abenteuer);
+			break;
+
+		case KAMPFPHASE:
+			// kein Monster hier am Leben
+			for (Wuerfel sw : this.abenteuer.getDungeon()) {
+				if (sw.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRANK)) {
+					continue;
+				} else if (sw.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRUHE)) {
+					continue;
+				} else {
+					System.out.println("Darf kein Monster von KAMPFPHASE to PLUENDERPHASE ");
+					return;
+				}
+			}
+			this.abenteuer.setPhase(Phase.PLUENDERPHASE);
+			this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(this.abenteuer);
+			break;
+
+		case PLUENDERPHASE:
+			// TRUHE und TRANK muss komsumiert werden
+			for (Wuerfel sw : this.abenteuer.getDungeon()) {
+				if (sw.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRANK)) {
+					return;
+				} else if (sw.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRUHE)) {
+					return;
+				}
+			}
+			// Zu Drachenphase soll die Drachen in Dungeon bringen
+			int drachenkopf = this.abenteuer.getDrachen().size();
+			int d_dungeon = drachenkopf / 3;
+
+			for (int i = 0; i < d_dungeon; i++) {
+				int l = this.abenteuer.getDrachen().size();
+
+				Wuerfel drachen_leben = this.abenteuer.getDrachen().get(l - 1);
+				// wenn es mehr als 3 Drachenkopf in Drachhoehle muss in
+				// Drachenphase in
+				// Spielfield bringen
+				// dazu sie muss erst aus der Drachhoehle entfehrnen.
+				for (int j = 0; j < 3; j++) {
+					this.abenteuer.getDrachen().remove(l - 1 - j);
+				}
+				// 3 Drachenkopf in Drachkohle ist gleich Drachenkopf in Dungeon
+				this.abenteuer.getDungeon().add(drachen_leben);
+			}
+			this.abenteuer.setPhase(Phase.DRACHENPHASE);
+			this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(this.abenteuer);
+			break;
+
+		case DRACHENPHASE:
+			for (Wuerfel sw : this.abenteuer.getDungeon()) {
+				if (sw.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRANK)) {
+					continue;
+				} else if (sw.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRUHE)) {
+					continue;
+				} else {
+					System.err.println("Darf kein Monster von DRACHENPHASE to UMGRUPPIERUNGSPHASE ");
+					return;
+				}
+			}
+			this.abenteuer.setPhase(Phase.UMGRUPPIERUNGSPHASE);
+			this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(this.abenteuer);
+			break;
+
+		case UMGRUPPIERUNGSPHASE:
+			// Von UMGRUPPIERUNGSPHASE zu WUERFELPHASE setzt so vor, dass kein
+			// Monster noch
+			// erleben ist.
+			// Falls noch Monster am Leben ist, kann Spieler nicht weiter
+			// spielen, sgn in
+			// Ruhe.
+
+			// 10 level muss sich beenden.
+			if (this.abenteuer.getLevel() == 10) {
+				this.abenteuerBeenden();
+				return;
+			}
+			this.abenteuer.setPhase(Phase.WUERFELPHASE);
+			this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(this.abenteuer);
+
+			// automatisch level hohc zu machen
+			this.naechstesLevel();
+			break;
+
+		default:
+			break;
+
+		}
+	}
+
+}

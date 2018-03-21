@@ -1,0 +1,162 @@
+package control.regeln;
+
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import control.RegelController;
+import model.Held;
+import model.Heldtyp;
+import model.Quelle;
+import model.Schatz;
+import model.SchwarzeWuerfelseite;
+import model.Spieler;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+/**
+ * Regel, die zum Öffnen der schwarzen Truhen-/Kistenwürfel genutzt wird
+ * 
+ * @author Pascal
+ *
+ */
+public class KistenOeffnerRegel extends RegelController {
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(final Quelle quelle, final List<Ziel> ziel) {
+		if (quelle == null || ziel == null) {
+			return false;
+		}
+
+		if (quelle.alsWuerfel() == null && quelle.alsHeld() == null) {
+			return false;
+		}
+
+		final Wuerfel wuerfel = quelle.alsWuerfel();
+		if (wuerfel != null) {
+			return istAlsWuerfelErlaubt(wuerfel, ziel);
+		}
+
+		final Held held = quelle.alsHeld();
+		if (held != null) {
+			return istAlsHeldErlaubt(held, ziel);
+		}
+
+		return false;
+	}
+
+	private boolean istAlsHeldErlaubt(final Held held, final List<Ziel> ziel) {
+		if (held != null
+				&& (held.getHeldtyp() == Heldtyp.KREUZRITTERINPALADININ
+						|| held.getHeldtyp() == Heldtyp.ARKANERSCHWERTMEISTERKAMPFMAGIER)
+				&& held.isUltimativeEingesetzt()) {
+			return false;
+		}
+		if (held == null || (held.getHeldtyp() != Heldtyp.KREUZRITTERINPALADININ
+				&& held.getHeldtyp() != Heldtyp.ARKANERSCHWERTMEISTERKAMPFMAGIER)) {
+			return false;
+		}
+
+		final int maxAnzahlZiele = Integer.MAX_VALUE;
+		// Maximale Anzahl an Kisten überschritten?
+		if (ziel.size() > maxAnzahlZiele) {
+			return false;
+		}
+
+		// Nur schwarze Kisten-Würfel sind als Ziel erlaubt
+		return !(ziel.stream()
+				.anyMatch(potentiellesZiel -> !(potentiellesZiel instanceof Wuerfel
+						|| potentiellesZiel.alsWuerfel().isWeiss() || potentiellesZiel.alsWuerfel()
+								.getSchwarzeWuerfelseite() != SchwarzeWuerfelseite.TRUHE)));
+
+	}
+
+	private boolean istAlsWuerfelErlaubt(final Wuerfel wuerfel, final List<Ziel> ziel) {
+		final int aktuellerSpielerIdx = masterController.getDungeonRoll().getAktuellerZustand().getSpielerIndex();
+		final Spieler spieler = masterController.getDungeonRoll().getAktuellerZustand().getSpieler()
+				.get(aktuellerSpielerIdx);
+
+		// Der Minnesaenger/Barde erlaubt es einen Zauberer wie einen Dieb zu
+		// behandeln; Adeptin/Hexe erlaubt es eine Spruchrolle wie einen Dieb zu
+		// benutzen
+		final int maxAnzahlZiele = wuerfel != null && (wuerfel.getWeisseWuerfelseite() == WeisseWuerfelseite.CHAMPION
+				|| wuerfel.getWeisseWuerfelseite() == WeisseWuerfelseite.DIEB
+				|| wuerfel.getWeisseWuerfelseite() == WeisseWuerfelseite.ZAUBERER
+						&& spieler.getHeld().getHeldtyp() == Heldtyp.MINNESAENGERBARDE
+				|| (spieler.getHeld().getHeldtyp() == Heldtyp.ADEPTINHEXE
+						&& wuerfel.getWeisseWuerfelseite() == WeisseWuerfelseite.SPRUCHROLLE)) ? Integer.MAX_VALUE : 1;
+
+		if (ziel.size() > maxAnzahlZiele) {
+			return false;
+		}
+
+		return !(ziel.stream()
+				.anyMatch(potentiellesZiel -> !(potentiellesZiel instanceof Wuerfel
+						|| potentiellesZiel.alsWuerfel().isWeiss() || potentiellesZiel.alsWuerfel()
+								.getSchwarzeWuerfelseite() != SchwarzeWuerfelseite.TRUHE)));
+	}
+
+	@Override
+	public void regelAusfuehren(final Quelle quelle, final List<Ziel> ziel) {
+		neuerSpielzustand();
+		Spielzustand aktuellerZustand = masterController.getDungeonRoll().getAktuellerZustand();
+
+		doRegelAusfuehren(ziel);
+
+		if (quelle.alsWuerfel() != null) {
+			Wuerfel wuerfel = quelle.alsWuerfel();
+			aktuellerZustand.getAbenteuer().getGefaehrten().remove(wuerfel);
+			if (!wuerfel.getTemporaer()) {
+				aktuellerZustand.getAbenteuer().getFriedhof().add(wuerfel);
+			}
+		} else if (quelle.alsSchatz() != null) {
+			masterController.getSchatzController().schatzZuruecklegen(quelle.alsSchatz());
+		} else if (quelle.alsHeld() != null) {
+			quelle.alsHeld().setUltimativeEingesetzt(true);
+		}
+	}
+
+	private void doRegelAusfuehren(final List<Ziel> ziel) {
+		final List<Wuerfel> wuerfelListe = casteZuWuerfelListe(ziel);
+		final Spielzustand aktuellerZustand = masterController.getDungeonRoll().getAktuellerZustand();
+
+		for (final Wuerfel wuerfel : wuerfelListe) {
+			final Schatz gezogenerSchatz = masterController.getSchatzController().schatzZiehen();
+
+			if (gezogenerSchatz == null) {
+				gibDemSpielerEinenErfahrungspunkt(aktuellerZustand);
+			} else {
+				gibDemSpielerDenSchatz(aktuellerZustand, gezogenerSchatz);
+			}
+
+			entferneWuerfelAusDemDungeon(aktuellerZustand, wuerfel);
+		}
+	}
+
+	private void neuerSpielzustand() {
+		final Spielzustand geklonterSpielzustand = masterController.getDungeonRoll().getAktuellerZustand()
+				.neuenSpielzustandErzeugen();
+
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterSpielzustand);
+	}
+
+	private List<Wuerfel> casteZuWuerfelListe(final List<Ziel> ziel) {
+		return ziel.stream().map(Ziel::alsWuerfel).collect(Collectors.toList());
+	}
+
+	private void entferneWuerfelAusDemDungeon(final Spielzustand geklonterZustand, final Wuerfel wuerfel) {
+		geklonterZustand.getAbenteuer().getDungeon().remove(wuerfel);
+	}
+
+	private void gibDemSpielerDenSchatz(final Spielzustand geklonterZustand, final Schatz gezogenerSchatz) {
+		geklonterZustand.getAbenteuer().getSpielerWerte().getSchaetze().add(gezogenerSchatz);
+	}
+
+	private void gibDemSpielerEinenErfahrungspunkt(final Spielzustand geklonterZustand) {
+		final int erfahrungsPunkte = geklonterZustand.getAbenteuer().getSpielerWerte().getErfahrungspunkte();
+		geklonterZustand.getAbenteuer().getSpielerWerte().setErfahrungspunkte(erfahrungsPunkte + 1);
+	}
+
+}

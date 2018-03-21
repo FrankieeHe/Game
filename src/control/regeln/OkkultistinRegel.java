@@ -1,0 +1,96 @@
+/**
+ * 
+ */
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Held;
+import model.Heldtyp;
+import model.Quelle;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+/**
+ * Okkultistin verwandle 1 Skelett in 1 Krieger
+ * 
+ * @author he
+ *
+ */
+public class OkkultistinRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		// TODO Auto-generated method stub
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+
+		if (quelle.alsHeld() == null) {
+			return false;
+		}
+		Held held = quelle.alsHeld();
+
+		if (held.getHeldtyp() != Heldtyp.OKKULTISTINTOTENBESCHWOERERIN) {
+			return false;
+		}
+
+		if (held.isUltimativeEingesetzt()) {
+			return false;
+		}
+
+		// Stufe 1 UF 1 Skelett gegen 1 Krieger
+		if (ziel.size() == 1 && !held.isLevelUp()) {
+			if (ziel.get(0) != null) {
+				if (!ziel.get(0).alsWuerfel().isWeiss()) {
+					return (ziel.get(0).alsWuerfel().getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.SKELETT);
+				}
+			}
+		} else // Stufe 2 UF 2 Skelette gegen 2 Krieger
+		if (ziel.size() == 2) {
+			if (ziel.get(0) != null && ziel.get(1) != null) {
+				if (!ziel.get(0).alsWuerfel().isWeiss() && !ziel.get(1).alsWuerfel().isWeiss()) {
+					return (ziel.get(0).alsWuerfel().getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.SKELETT
+							&& ziel.get(1).alsWuerfel().getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.SKELETT);
+				}
+			}
+		}
+
+		return false;
+
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		// Spielzustand klonen & aktualisieren
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand()
+				.neuenSpielzustandErzeugen();
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+
+		// Loeschen der 2 Skelette
+		List<Wuerfel> monsterWuerfel = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer()
+				.getDungeon();
+		List<Wuerfel> gefaehrtenWuerfel = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer()
+				.getGefaehrten();
+		for (Ziel skelett : ziel) {
+			monsterWuerfel.remove(skelett.alsWuerfel());
+			Wuerfel krieger = new Wuerfel(true);
+			krieger.setTemporaer(true);
+			krieger.setWeisseWuerfelseite(WeisseWuerfelseite.KRIEGER);
+			gefaehrtenWuerfel.add(krieger);
+		}
+		
+		// UF auf genutzt setzen
+		masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().setUltimativeEingesetzt(true);
+		
+		// Phasenwechsel
+		masterController.getAbenteuerController().phaseWechseln();
+	}
+}

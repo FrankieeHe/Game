@@ -1,0 +1,31 @@
+package control;
+
+
+public class SpeicherController {
+
+	private MasterController masterController;
+	
+	/**
+	 * Alle Spieldaten werden in einer Datei gesichert. 
+	 * @param pfad Dateipfad, in welchen das Spiel exportiert werden soll.
+	 */
+	public void spielSpeichern(String pfad) {
+		
+	}
+
+	/**
+	 *  Die Daten eines Spiels werden aus einer Datei geladen.
+	 *  @param pfad Dateipfad, aus welchem das Spiel geladen werden soll
+	 */
+	public void spielLaden(String pfad) {
+		
+	}
+
+	
+	/**
+	 * Das gleiche wie Spiel speichern, allerdings wird das Spiel auch geschlossen. 
+	 */
+	public void spielUnterbrechen() {
+		
+	}
+}

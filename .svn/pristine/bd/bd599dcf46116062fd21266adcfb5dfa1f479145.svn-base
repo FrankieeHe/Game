@@ -1,0 +1,83 @@
+package model;
+
+/**Die Klasse Held verwaltet den Zustand eines Helden. Welche Art Held verwaltet wird, wird im
+ * Attribut heldtyp festgelegt. Verwaltet wird, ob der Held bereits aufgelevelt ist, welches Relevanz
+ * f�r die Heldenf�higkeiten hat und ob die ultimative F�higkeit eingesetzt wurde.
+ * @author Rahel
+ *
+ */
+public class Held implements Quelle {
+
+	/**
+	 * Wenn der Spieler, dem der Held zugeordnet ist mindestens 5 Erfahrungspunkte gesammelt hat
+	 * wird dieser Wert auf <code>true</code> gesetzt. Intial ist er <code>false</code>.
+	 */
+	private boolean levelUp;
+
+	/**
+	 * Dieser Wert wird nach einsetzen der ultimativen F�higkeit auf <code>true</code> gesetzt, um ein
+	 * erneutes Ausf�hren dieser im gleichen Abenteuer zu unterbinden. Vor Beginn des n�chsten Abenteuers
+	 * des diesem Helden zugeordneten Spielers wird dieser Wert wieder auf <code>false</code> zur�ckgesetzt.
+	 */
+	private boolean ultimativeEingesetzt;
+
+	/**
+	 * In diesem Wert wird die Art des Helden festgehalten.
+	 */
+	private Heldtyp heldtyp;
+
+
+	/**
+	 * @see model.Quelle#alsWuerfel()
+	 */
+	public Wuerfel alsWuerfel() {
+		return null;
+	}
+
+
+	/**Gibt den aktuellen Helden zur�ck.
+	 * @see model.Quelle#alsHeld()
+	 */
+	public Held alsHeld() {
+		return this;
+	}
+
+
+	/**
+	 * @see model.Quelle#alsSchatz()
+	 */
+	public Schatz alsSchatz() {
+		return null;
+	}
+
+
+	public boolean isLevelUp() {
+		return levelUp;
+	}
+
+
+	public void setLevelUp(boolean levelUp) {
+		this.levelUp = levelUp;
+	}
+
+
+	public boolean isUltimativeEingesetzt() {
+		return ultimativeEingesetzt;
+	}
+
+
+	public void setUltimativeEingesetzt(boolean ultimativeEingesetzt) {
+		this.ultimativeEingesetzt = ultimativeEingesetzt;
+	}
+
+
+	public Heldtyp getHeldtyp() {
+		return heldtyp;
+	}
+
+
+	public void setHeldtyp(Heldtyp heldtyp) {
+		this.heldtyp = heldtyp;
+	}
+
+}

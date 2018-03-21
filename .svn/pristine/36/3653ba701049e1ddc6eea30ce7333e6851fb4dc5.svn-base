@@ -1,0 +1,102 @@
+package control.regeln;
+
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import control.RegelController;
+import model.Quelle;
+import model.Schatz;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+/**
+ * Regel, die zum Öffnen der schwarzen Truhen-/Kistenwürfel genutzt wird
+ * @author Pascal
+ *
+ */
+public class KistenOeffnerRegel extends RegelController {
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		if (quelle == null || ziel == null) {
+			return false;
+		}
+		
+		if (!(quelle instanceof Wuerfel)) {
+			return false;
+		}
+		
+		Wuerfel wuerfel = quelle.alsWuerfel();
+		if (!wuerfel.isWeiss()) {
+			return false;
+		}
+
+		
+		//Diebe Dürfen egal wie viele Kisten öffnen
+		int maxAnzahlZiele = wuerfel.getWeisseWuerfelseite() == WeisseWuerfelseite.DIEB ? Integer.MAX_VALUE : 1;
+		
+		//Maximale Anzahl an Kisten überschritten?
+		if (ziel.size()>maxAnzahlZiele) {
+			return false;
+		}
+		
+		//Nur schwarze Kisten-Würfel sind als Ziel erlaubt
+		if (ziel.stream().anyMatch(z -> !(z instanceof Wuerfel || z.alsWuerfel().isWeiss() || z.alsWuerfel().getSchwarzeWuerfelseite()!=SchwarzeWuerfelseite.TRUHE))) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		macheSpielzug(geklonterZustand -> doRegelAusführen(ziel, geklonterZustand));
+	}
+
+	private void doRegelAusführen(List<Ziel> ziel, Spielzustand neuerZustand) {
+		List<Wuerfel> wuerfelListe = casteZuWuerfelListe(ziel);
+		
+		for (Wuerfel wuerfel : wuerfelListe) {
+			Schatz gezogenerSchatz = masterController.getSchatzController().schatzZiehen();
+			
+			if (gezogenerSchatz == null) {
+				gibDemSpielerEinenErfahrungspunkt(neuerZustand);
+			} else {
+				gibDemSpielerDenSchatz(neuerZustand, gezogenerSchatz);
+			}
+			
+			entferneWuerfelAusDemDungeon(neuerZustand, wuerfel);
+		}
+	}
+	
+	private void macheSpielzug(Consumer<Spielzustand> spielzug) {
+		Spielzustand geklonterSpielzustand = masterController.getDungeonRoll().getAktuellerZustand().neuenSpielzustandErzeugen();
+		
+		spielzug.accept(geklonterSpielzustand);
+		
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterSpielzustand);
+	}
+	
+
+	private List<Wuerfel> casteZuWuerfelListe(List<Ziel> ziel) {
+		return ziel.stream().map(Ziel::alsWuerfel).collect(Collectors.toList());
+	}
+
+	private void entferneWuerfelAusDemDungeon(Spielzustand geklonterZustand, Wuerfel wuerfel) {
+		geklonterZustand.getAbenteuer().getDungeon().remove(wuerfel);
+	}
+
+	private void gibDemSpielerDenSchatz(Spielzustand geklonterZustand, Schatz gezogenerSchatz) {
+		geklonterZustand.getAbenteuer().getSpielerWerte().getSchaetze().add(gezogenerSchatz);
+	}
+
+	private void gibDemSpielerEinenErfahrungspunkt(Spielzustand geklonterZustand) {
+		int erfahrungsPunkte = geklonterZustand.getAbenteuer().getSpielerWerte().getErfahrungspunkte();
+		geklonterZustand.getAbenteuer().getSpielerWerte().setErfahrungspunkte(erfahrungsPunkte+1);
+	}
+	
+}

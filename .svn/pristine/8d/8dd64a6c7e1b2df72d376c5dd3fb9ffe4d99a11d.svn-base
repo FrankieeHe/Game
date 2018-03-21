@@ -1,0 +1,127 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Heldtyp;
+import model.Quelle;
+import model.Schatz;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+import model.Wuerfel;
+import model.Ziel;
+
+public class PaladininRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		// TODO Auto-generated method stub
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		boolean erlaubt = false;
+		// Quelle muss Paladinin sein
+		if (quelle.alsHeld() != null) {
+			if (quelle.alsHeld().getHeldtyp() == Heldtyp.KREUZRITTERPALADININ) {
+				if (quelle.alsHeld().isLevelUp()) {
+					// Ultimative Faehigkeit darf noch nicht benutzt worden sein
+					if (!quelle.alsHeld().isUltimativeEingesetzt()) {
+						// Ein Schatz muss geopfert werden
+						int enthaeltSchatz = 0;
+						// Ziele duerfen nur weisse Wuerfel sein
+						int enthalteneWeisseWuerfel = 0;
+						for(Ziel aktuellesZiel : ziel) {
+							if(aktuellesZiel.alsSchatz() != null) {
+								enthaeltSchatz += 1;
+							}if(aktuellesZiel.alsWuerfel().isWeiss()) {
+								enthalteneWeisseWuerfel += 1;
+							}
+						}
+						if(enthaeltSchatz == 1) {
+							// Anzahl Traenke muss gleich der Anzahl an Weissen Wuerfeln sein
+							List<Wuerfel> monster = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon();
+							for(Wuerfel aktuellesMonster : monster) {
+								if(aktuellesMonster.getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.TRANK) {
+									enthalteneWeisseWuerfel -= 1;
+								}
+							}
+							if(enthalteneWeisseWuerfel == 0) {
+								erlaubt = true;
+							}
+						}
+					}
+				}
+			}
+		}
+		return erlaubt;
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		
+		// Spielzustand kopieren und umsetzen
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand()
+				.neuenSpielzustandErzeugen();
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+
+		// Entfernen des geopferten Schatzes
+		for(Ziel aktuellesZiel : ziel) {
+			if(aktuellesZiel.alsSchatz() != null) {
+				masterController.getSchatzController().schatzZuruecklegen(aktuellesZiel.alsSchatz());
+				break;
+			}
+		}
+
+		// Besiegen aller Monster und in der Drachenhoehle ablegen
+		// Oeffnen aller Kisten
+		List<Wuerfel> monsterListe = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer()
+				.getDungeon();
+		List<Wuerfel> drachenListe = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer()
+				.getDrachen();
+		
+		// TODO Falsch verstanden ?
+		for (Wuerfel monster : monsterListe) {
+			// 1. Fall Kisten oeffnen
+			if (monster.getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.TRUHE) {
+				Schatz neuerSchatz = masterController.getSchatzController().schatzZiehen();
+				// Schatz vorhanden, Spielerwerten hinzufuegen
+				if (neuerSchatz != null) {
+					List<Schatz> aktuelleSchaetze = masterController.getDungeonRoll().getAktuellerZustand()
+							.aktuellerSpieler().getSpielerWerte().getSchaetze();
+					aktuelleSchaetze.add(neuerSchatz);
+					masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getSpielerWerte()
+							.setSchaetze(aktuelleSchaetze);
+				} else {// Erfahrungspunkt hinzufuegen
+					int aktuelleEP = masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler()
+							.getSpielerWerte().getErfahrungspunkte();
+					masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getSpielerWerte()
+							.setErfahrungspunkte(aktuelleEP + 1);
+				}
+			} else // 2. Fall Trank trinken
+				if (monster.getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.TRANK) {
+				//Wiederbeleben des Gefaherten
+				masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getFriedhof().remove(ziel.get(0).alsWuerfel());
+				masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten().add(ziel.get(0).alsWuerfel());
+				ziel.remove(0);
+				// Trank verbrauchen
+				monsterListe.remove(monster);
+			} else {
+				// Monster drehen
+				masterController.getWuerfelController().wuerfelseiteErsetzen(monster, SchwarzeWuerfelseite.DRACHENKOPF);
+				// Den neuen Drachen hinzufuegen
+				drachenListe.add(monster);
+				// Aus der Monsterliste entfernen
+				monsterListe.remove(monster);
+			}
+			
+			// UF genutzt setzen
+			masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().setUltimativeEingesetzt(true);
+			// Phase wechseln
+			masterController.getAbenteuerController().phaseWechseln();
+		}	
+	}
+
+}

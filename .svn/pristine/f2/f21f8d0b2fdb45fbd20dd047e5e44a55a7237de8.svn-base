@@ -1,0 +1,42 @@
+package gui.spielfeld;
+
+import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+
+public class SpielerGUI {
+
+	private Pane spielerPane;
+	private Pane heldPane;
+	private Label nameLabel;
+	private Label levelLabel;
+	private VBox schatzVBox;
+	
+	public SpielerGUI(Pane spielerPane, Pane heldPane, Label nameLabel, Label levelLabel, VBox schatzVBox) {
+		this.spielerPane = spielerPane;
+		this.heldPane = heldPane;
+		this.nameLabel = nameLabel;
+		this.levelLabel = levelLabel;
+		this.schatzVBox = schatzVBox;
+	}
+
+	public Pane getSpielerPane() {
+		return spielerPane;
+	}
+
+	public Pane getHeldPane() {
+		return heldPane;
+	}
+
+	public Label getNameLabel() {
+		return nameLabel;
+	}
+
+	public Label getLevelLabel() {
+		return levelLabel;
+	}
+
+	public VBox getSchatzVBox() {
+		return schatzVBox;
+	}
+}

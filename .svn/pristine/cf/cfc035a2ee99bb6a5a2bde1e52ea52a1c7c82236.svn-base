@@ -1,0 +1,55 @@
+package control.regeln;
+
+import java.util.Iterator;
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Quelle;
+import model.Wuerfel;
+import model.Ziel;
+import model.WeisseWuerfelseite;
+
+public class NeuWuerfeln extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		// TODO Auto-generated method stub
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		if(quelle.alsSchatz() != null){
+			
+		}else if(quelle.alsWuerfel() != null){
+			Wuerfel ursache = quelle.alsWuerfel();
+			if(WeisseWuerfelseite.SPRUCHROLLE.equals(ursache.getWeisseWuerfelseite())){
+				Iterator<Ziel> zielIterator = ziel.iterator();
+				while(zielIterator.hasNext()){
+					Ziel naechstesZiel = zielIterator.next();
+					if(naechstesZiel.alsWuerfel() == null){
+						return false;
+					}else{
+						Wuerfel zielWuerfel = naechstesZiel.alsWuerfel();
+						zielWuerfel.wuerfeln();
+					}
+				}
+				return true;
+			}
+		}else{
+			
+		}
+		
+		
+		
+		return false;
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		// TODO Auto-generated method stub
+		super.regelAusfuehren(quelle, ziel);
+	}
+
+}

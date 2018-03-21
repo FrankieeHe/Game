@@ -1,0 +1,43 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Quelle;
+import model.Ziel;
+import model.Schatz;
+import model.Wuerfel;
+import model.SchwarzeWuerfelseite;
+import model.WeisseWuerfelseite;
+
+public class TrankRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		Schatz schatz = quelle.alsSchatz();
+		Wuerfel wuerfel = quelle.alsWuerfel();
+		if(Schatz.TRANK.equals(schatz)||(wuerfel != null && wuerfel.getWeisseWuerfelseite() != null && !WeisseWuerfelseite.SPRUCHROLLE.equals(wuerfel.getWeisseWuerfelseite())))
+		{
+			
+		}
+		else
+		{
+			return false;
+		}
+		
+		
+		return true;
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		super.regelAusfuehren(quelle, ziel);
+	}
+
+}

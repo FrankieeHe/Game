@@ -1,0 +1,165 @@
+Kreuzritterin/Paladinin:
+
+Level 1:
+
+Spezial:
+Priester koennen als Krieger benutzt werden und Krieger als Priester
+
+Ulti (Heiliger Schlag):
+Die Kreuzritterin darf 1x pro Dungeonabenteuer entweder als Priester oder als Krieger verwendet werden
+
+
+Level 2:
+
+Spezial:
+Priester koennen als Krieger benutzt werden und Krieger als Priester
+
+Ulti (Goettliche Intervention):
+Lege 1 Schatzmarker ab, um alle Monster zu besiegen, alle Kisten zu oeffnen, alle Traenke zu konsumieren und alle Wuerfel in der Drachenhoehle abbzulegen. Dies zaehlt nicht als das Besiegen des Drachen, und du ziehst keine Schaetze und bekommst auch keine Ehrfaherung. Du darfst jedoch fuer jede geoefnnete Kiste 1 Schatz ziehen.
+
+
+
+Adeptin/Hexe:
+
+Level 1:
+
+Spezial:
+Spruchrollen duerfen wie ein beliebiger Gefaehrte benutzt werden. Du darfst als Adeptin 3 Spruchrollen benutzen, um den Drachen zu besiegen.
+
+Ulti (Verzaubern):
+Verwandle 1 Monster in 1 Trank. Lege dazu einen der beiden Dungeonwuerfel zurueck in den Vorrat und drehe den anderen auf die Trankseite.
+
+
+Level 2:
+
+Spezial:
+Spruchrollen duerfen wie ein beliebiger Gefaehrte benutzt werden. Du darfst als Adeptin 3 Spruchrollen benutzen, um den Drachen zu besiegen.
+
+Ulti (Verzaubern):
+Verwandle 2 Monster in 1 Trank. Lege dazu einen der beiden Dungeonwuerfel zurueck in den Vorrat und drehe den anderen auf die Trankseite.
+
+
+
+Halb-Kobold/Haeuptling:
+
+Level 1:
+
+Spezial:
+Du darfst jederzeit wahrend der Monsterphase Kisten oeffnen und Traenke konsumieren - auch dann, wenn die Monster noch nicht besiegt sind! Die entsprechenden Gruppenwuerfel musst du wie sonst auch ausgeben.
+
+Ulti (Um Hilfe rufen):
+Verwandle 1 Kobold in 1 Dieb, der wie ein Gruppenwuerfel benutzt werden kann. Lege diesen in der naechsten Umgruppierungsphase ab.
+
+
+Level 2:
+
+Spezial:
+Du darfst jederzeit wahrend der Monsterphase Kisten oeffnen und Traenke konsumieren - auch dann, wenn die Monster noch nicht besiegt sind! Die entsprechenden Gruppenwuerfel musst du wie sonst auch ausgeben.
+
+Ulti (Den Chef herauskennen):
+Verwandle 2 Kobold in 2 Dieb, der wie ein Gruppenwuerfel benutzt werden kann. Lege diesen in der naechsten Umgruppierungsphase ab.
+
+
+
+Ritter/Drachentoeter:
+
+Level 1:
+
+Spezial:
+Beim Zusammenstellen der Gruppe werden alle Spruchrollen sofort zu Champions. Spaeter erhaltene Spruchrollen (etwa durch die Benutzung eines Trankes oder eines Schatzes) sind davon nicht betroffen.
+
+Ulti (Kriegsschrei):
+Ein schreckliches Geheul jagt alle Monster aus dem Dungeon weckt aber den Drachen. Verwandle alle Monster in Drachenkoepfe und lege sie in die Drachenhoehle.
+
+
+Level 2:
+
+Spezial:
+Beim Zusammenstellen der Gruppe werden alle Spruchrollen sofort zu Champions. Du benoetigst nur 2 verschiedene Gefaehrten, um den Drachen zu besiegen (anstelle von 3).
+
+Ulti (Kriegsschrei):
+Verwandle alle Monster in Drachenkoepfe und lege sie in die Drachenhoehle.
+
+
+
+Soeldner/Kommandant:
+
+Level 1:
+
+Spezial:
+Wenn du die Gruppe Zusammenstellst, darfst du eine beliebige Anzahl von Gruppenwuerfeln einmal neu rollen.
+
+Ulti (Gezielter Schlag):
+Besiege 2 beliebige Monster. Denke daran: Wuerfel in der Drachenhoehle sind keine Monster.
+
+
+Level 2:
+
+Spezial:
+Krieger besiegen 1 zusaetzliches Monster einer beliebigen Art, d.h. 1 zusaetzlicher Dungeonwuerfel eines Monsters wird abgelegt. Denke daran: Wuerfel in der Drachenhoehle sind keine Monster!
+
+Ulti (Praesenz auf dem Schlachtfeld):
+Rolle eine beliebige Anzahl von Gruppen- und Dungeonwuerfeln neu.
+
+
+
+Minnesaenger/Barde:
+
+Level 1:
+
+Spezial:
+Diebe koennen als Zauberer benutzt werden und Zauberer als Diebe.
+
+Ulti (Bardenlied):
+Die Musik zaehmt die wilde Bestie! Lege alle Wuerfel in der Drachenhoehle ab. Dies zaehlt nicht als das Besiegen des Drachen, und du ziehst auch keine Schaetze und bekommst auch keine Erfahrung.
+
+
+Level 2:
+
+Spezial:
+Diebe koennen als Zauberer benutzt werden und Zauberer als Diebe. Champions besiegen 1 zusaetzliches Monster einer beliebigen Art, d.h. 1 zusaetzlicher Dungeonwuerfel eines Monsters wird abgelegt. Denke daran: Wuerfel in der Drachenhoehle sind keine Monster!
+
+Ulti (Bardenlied):
+Lege alle Wuerfel in der Drachenhoehle ab.
+
+
+
+Okkultisting/Totenbeschwoererin:
+
+Level 1:
+
+Spezial:
+Priester koennen als Zauberer benutzt werden und Zauberer als Priester.
+
+Ulti (Tote beleben):
+Verwandle 1 Skelett in 1 Krieger, der wie ein Gruppenwuerfel benutzt wird. Lege ihn in der naechsten Umgruppierungsphase ab.
+
+
+Level 2:
+
+Spezial:
+Priester koennen als Zauberer benutzt werden und Zauberer als Priester.
+
+Ulti (Herrin ueber die Toten):
+Verwandle 2 Skelett in 2 Krieger, der wie ein Gruppenwuerfel benutzt wird. Lege ihn in der naechsten Umgruppierungsphase ab.
+
+
+
+Arkaner Schwertmeister/Kampfmagier:
+
+Level 1:
+
+Spezial:
+Krieger koennen als Zauberer benutzt werden und Zauberer als Krieger.
+
+Ulti (Arkane Klinge):
+Der Arkane Schwertmeister darf wie ein Zauberer oder ein Krieger benutzt werden.
+
+
+Level 2:
+
+Spezial:
+Krieger koennen als Zauberer benutzt werden und Zauberer als Krieger.
+
+Ulti (Arkane Raserei):
+Lege alle Dungeonwuerfel ab. Monster, Traenke, Kisten und die Wuerfel in der Drachenhoehle kehren in den Vorrat zurueck. Dies zaehlt nicht als das Besiegen des Drachen; du ziehst keine Schaetze, darfst die Traenke nicht konsumieren, keine Gefaehrten wiedererwecken, und du bekommst auch keine Erfahrung.

@@ -1,0 +1,133 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Quelle;
+import model.Schatz;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+import model.Wuerfel;
+import model.Ziel;
+import model.WeisseWuerfelseite;
+import model.Held;
+import model.Heldtyp;
+
+public class NeuWuerfeln extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+
+		boolean erlaubt = true;
+		boolean dungeonWuerfelErlaubt = true;
+
+		if (quelle.alsSchatz() != null) {
+			Schatz ursache = quelle.alsSchatz();
+			if (!Schatz.SPRUCHROLLE.equals(ursache)) {
+				erlaubt = false;
+			}
+		} else if (quelle.alsWuerfel() != null) {
+			Wuerfel ursache = quelle.alsWuerfel();
+			if (!WeisseWuerfelseite.SPRUCHROLLE.equals(ursache.getWeisseWuerfelseite())) {
+				erlaubt = false;
+			}
+			// Ursache muss in den Gefaehrten enthalten sein
+			if(!masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten().contains(ursache)) {
+				erlaubt = false;
+			}
+		} else {
+			Held ursache = quelle.alsHeld();
+			if (!Heldtyp.SOELDNERKOMMANDANT.equals(ursache.getHeldtyp())) {
+				erlaubt = false;
+			} else {
+				// Dann duerfen auch Dungeon Wuerfel neu gewuerfelt werden
+				if (ursache.isLevelUp()) {
+					// Darf nur einmal pro Abenteuer eingesetzt werden
+					if (ursache.isUltimativeEingesetzt()) {
+						erlaubt = false;
+					}
+				} else {
+					// TODO Ueber Abenteuer pruefen, ob Spieler gleich sind 
+					// wenn nein -> neues Abenteuer -> darf genutzt werden
+					// Soeldner SF wird beim Erstellen des neuen Abenteuers eingesetzt
+					erlaubt = false;
+				}
+			}
+		}
+		if (erlaubt) {
+			// Ueber Ziele iterieren, pruefen, ob es sich nur um Wuerfel in der Zielliste
+			// handelt
+			for (Ziel zielWuerfel : ziel) {
+				if (zielWuerfel.alsWuerfel() == null) {
+					return false;
+				} else {
+					Wuerfel veraenderung = zielWuerfel.alsWuerfel();
+					// Wuerfelseite ist schwarz, aber Ursache ist ein Soeldner
+					if (veraenderung.getSchwarzeWuerfelseite() != null && !dungeonWuerfelErlaubt) {
+						return false;
+					}
+					// Drachenkoepfe duerfen nicht gedreht werden
+					if(SchwarzeWuerfelseite.DRACHENKOPF.equals(veraenderung.getSchwarzeWuerfelseite())) {
+						return false;
+					}
+					if(!masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten().contains(veraenderung) && !masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon().contains(veraenderung)) {
+						return false;
+					}
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		// Klonen des Spielzustands
+		Spielzustand neuerZustand = masterController.getDungeonRoll().getAktuellerZustand().neuenSpielzustandErzeugen();
+		//Einfuegen des geklonten Zustands
+		masterController.getDungeonRoll().setAktuellerZustand(neuerZustand);
+				
+		// Ueber Ziele itereieren
+		for (Ziel zielWuerfel : ziel) {
+			Wuerfel veraenderung = zielWuerfel.alsWuerfel();		
+			// neu wuerfeln
+			veraenderung.wuerfeln();
+		}
+		
+		// Held
+		if (quelle.alsHeld() != null) {
+			Held held = quelle.alsHeld();
+			// Ultimative Faehigkeit auf genutzt setzen
+			if(held.isLevelUp()) {
+				held.setUltimativeEingesetzt(true);
+			}
+		}
+		
+		// Schatz zuruecklegen
+		if (quelle.alsSchatz() != null) {
+			Schatz schatz = quelle.alsSchatz();
+			masterController.getSchatzController().schatzZuruecklegen(schatz);
+		}
+		
+		// Wuerfel auf Friedhof verschieben
+		if (quelle.alsWuerfel() != null) {
+			
+			Wuerfel wuerfel = quelle.alsWuerfel();
+	
+			// entfernen des Wuerfels aus Gefaehrten und auf den Friedhof verschieben
+			masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getFriedhof().add(wuerfel);
+			masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten().remove(wuerfel);
+		}
+		// Phase wechseln
+		masterController.getAbenteuerController().phaseWechseln();
+		
+	}
+
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1280.0" prefWidth="1020.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.spielerWaehlen.SpielerWaehlenController">
+   <children>
+      <TextField fx:id="spieler1Feld" layoutY="264.0" layoutX="200.0" onAction="#spieler1Eingeben" />
+      <TextField fx:id="spieler2Feld" layoutY="337.0" layoutX="200.0" onAction="#spieler2Eingeben" />
+      <TextField fx:id="spieler3Feld" layoutY="414.0" layoutX="200.0" onAction="#spieler3Eingeben" />
+      <TextField fx:id="spieler4Feld" layoutY="486.0" layoutX="200.0" onAction="#spieler4Eingeben" />
+      <Text fill="WHITE" layoutX="207.0" layoutY="252.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Spieler 1" />
+      <Text fill="WHITE" layoutX="207.0" layoutY="328.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Spieler 2" />
+      <Text fill="WHITE" layoutX="207.0" layoutY="401.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Spieler 3" />
+      <Text fill="WHITE" layoutX="207.0" layoutY="478.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Spieler 4" />
+      <ComboBox fx:id="KI1Box" layoutX="850.0" layoutY="264.0" onAction="#KI1Eingeben" prefWidth="150.0" />
+      <ComboBox fx:id="KI2Box" layoutX="850.0" layoutY="337.0" onAction="#KI1Eingeben" prefWidth="150.0" />
+      <ComboBox fx:id="KI3Box" layoutX="850.0" layoutY="414.0" onAction="#KI1Eingeben" prefWidth="150.0" />
+      <ComboBox fx:id="KI4Box" layoutX="850.0" layoutY="486.0" onAction="#KI1Eingeben" prefWidth="150.0" />
+      <Text fill="WHITE" layoutX="850.0" layoutY="252.0" strokeType="OUTSIDE" strokeWidth="0.0" text="KI 1" />
+      <Text fill="WHITE" layoutX="850.0" layoutY="328.0" strokeType="OUTSIDE" strokeWidth="0.0" text="KI 2" />
+      <Text fill="WHITE" layoutX="850.0" layoutY="400.0" strokeType="OUTSIDE" strokeWidth="0.0" text="KI 3" />
+      <Text fill="WHITE" layoutX="850.0" layoutY="477.0" strokeType="OUTSIDE" strokeWidth="0.0" text="KI 4" />
+      <Separator layoutX="220.0" layoutY="518.0" prefHeight="0.0" prefWidth="800.0" />
+      <Button fx:id="abbrechenButton" layoutX="200.0" layoutY="560.0" mnemonicParsing="false" onAction="#abbrechen" text="Abbrechen" />
+      <TextField fx:id="rundenzahlFeld" layoutX="536.0" layoutY="560.0" onAction="#rundenzahlEingeben" prefWidth="132.0" />
+      <Text fill="WHITE" layoutX="562.0" layoutY="547.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Rundenzahl" />
+      <Button fx:id="oKButton" layoutX="949.0" layoutY="560.0" mnemonicParsing="false" onAction="#ok" text="OK" />
+      <Text fill="WHITE" layoutX="519.0" layoutY="244.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Spieler und KI festlegen" />
+   </children>
+</AnchorPane>

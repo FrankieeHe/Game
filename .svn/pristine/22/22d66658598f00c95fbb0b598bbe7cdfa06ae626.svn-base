@@ -1,0 +1,56 @@
+package control;
+
+import java.util.Collection;
+import model.Quelle;
+import java.util.List;
+
+
+
+
+public class AuswahlController {
+
+	private Collection<RegelController> regelController;
+
+	private MasterController masterController;
+	
+ /**
+ * @author Merle
+ * @param quelle loest Handlung aus
+ * @param ziel werden / wird durch die Handlung beeinflust
+ * @return false, wenn es keine Regel gibt, die diese Handlung erlaubt <br/> 
+ *  true, wenn eine Regel gefunden wurde, die diese Handlung erlaubt
+ * @preconditions @see moeglicheZiele wurde aufgerufen
+ * @postconditions @see regelAusfuehren wird aufgerufen
+ * <br/>
+ * Es wird versucht, eine Regel zu finden, welche die Kombination aus Quelle und 
+ * Ziel zu einer Handlung kombinieren kann. <br/>
+ * Wenn mehrere Regeln moeglich sind, wird die erst moegliche Aktion ausgefuehrt. 
+ */
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List ziel) {
+		return false;
+	}
+	
+	/**
+	 * @author Merle
+	 * @return Liste moeglicher Ziele; null wenn keine vorhanden sind
+	 * @postconditions @see pruefeAuswahlErlaubt(Quelle quelle, List ziel) wird aufgerufen
+	 * @preconditions Nutzer waehlt Quelle aus
+	 * <br/>
+	 * Prueft alle Objekte, die ausliegen, ob eine Kombination moeglich waere
+	 */
+	public List moeglicheZiele(Quelle quelle) {
+		return null;
+	}
+	
+ /**
+ * @author Merle
+ * @param quelle Loest Aktion aus
+ * @param ziel Werden von Handlung beeinflusst
+ * @preconditions @see pruefeAuswahlErlaubt lieferte true
+ * @postconditions ruft regelAusfuehren des jeweiligen Regelcontrollers auf
+ */
+	public void regelAusfuehren(Quelle quelle, List ziel) {
+
+	}
+
+}

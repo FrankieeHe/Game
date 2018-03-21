@@ -1,0 +1,55 @@
+package model;
+
+import java.util.List;
+
+/**Die SpielerWerte werden sowohl von Abenteuer, als auch von Spieler genutzt um die von einem Spieler gesammelten
+ * Erfahrungspunkte und Sch�tze festzuhalten. Dabei greift das aktuelle Abenteuer auf eine andere Instanz der SpielerWerte
+ * zu als die des aktuellen Spieler-Objekts, da die in einem Abenteuer gesammelten Sch�tze und Erfahrungspunkte zun�chst nur
+ * dort gespeichert werden, um ein Entfernen bei Scheitern des Abenteuers einfach zu erm�glichen.
+ * @author Rahel
+ *
+ */
+public class SpielerWerte {
+
+	/**
+	 * Die vom Spieler gesammelten Erfahrungspunkte.
+	 */
+	private int erfahrungspunkte;
+	
+	/**
+	 * End Erfahrungspunkt ist unterschiedlich von erfahrungspunkt fuer Abenteuerbeenden.
+	 * Der verzeichnet den insgesamt Erfahrungspunkt, der nach dem Abenteuer berechnet ist, all Erfahrungspunkt, Anzahl 
+	 * vom Level und den Value vom all Schaetze.
+	 */
+	private int end_Erfahrungspunkt;
+
+	/**
+	 * Die vom Spieler gesammelten Sch�tze
+	 */
+	private List<Schatz> schaetze;
+
+	public int getErfahrungspunkte() {
+		return erfahrungspunkte;
+	}
+
+	public void setErfahrungspunkte(int erfahrungspunkte) {
+		this.erfahrungspunkte = erfahrungspunkte;
+	}
+
+	public int getEnd_Erfahrungspunkt() {
+		return end_Erfahrungspunkt;
+	}
+
+	public void setEnd_Erfahrungspunkt(int end_Erfahrungspunkt) {
+		this.end_Erfahrungspunkt = end_Erfahrungspunkt;
+	}
+
+	public List<Schatz> getSchaetze() {
+		return schaetze;
+	}
+
+	public void setSchaetze(List<Schatz> schaetze) {
+		this.schaetze = schaetze;
+	}
+
+}

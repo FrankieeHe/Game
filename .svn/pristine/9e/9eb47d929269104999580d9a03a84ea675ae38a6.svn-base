@@ -1,0 +1,838 @@
+package gui.spielfeld;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import control.MasterController;
+import gui.startbildschirm.StartbildschirmController;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Stage;
+import model.Held;
+import model.Phase;
+import model.Quelle;
+import model.Schatz;
+import model.SchwarzeWuerfelseite;
+import model.Spieler;
+import model.SpielerWerte;
+import model.Spielertyp;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+
+/**
+ * GUI von Spielfeld
+ * @author Dmytro
+ * @author Mikhail
+ *
+ */
+public class SpielfeldController implements SpielfeldAUI {
+
+	@FXML
+	private AnchorPane anchorPane;
+	
+	@FXML
+	private Button tippButton;
+	
+    @FXML
+    private Label nameLabel1;
+
+    @FXML
+    private Label levelLabel1;
+
+    @FXML
+    private VBox schatzVBox1;
+
+    @FXML
+    private Pane heldPane1;
+
+    @FXML
+    private Pane spielerPane1;
+
+    @FXML
+    private GridPane friedhofGridPane;
+
+    @FXML
+    private GridPane huelleGridPane;
+
+    @FXML
+    private Label dungeonLabel;
+
+    @FXML
+    private GridPane gefaerteGridPane;
+
+    @FXML
+    private GridPane monsterGridPane;
+
+    @FXML
+    private Label nameLabel4;
+
+    @FXML
+    private Label levelLabel4;
+
+    @FXML
+    private VBox schatzVBox4;
+
+    @FXML
+    private Pane heldPane4;
+
+    @FXML
+    private Pane spielerPane4;
+    
+    @FXML
+    private Label nameLabel2;
+
+    @FXML
+    private Label levelLabel2;
+
+    @FXML
+    private VBox schatzVBox2;
+
+    @FXML
+    private Pane heldPane2;
+
+    @FXML
+    private Pane spielerPane2;
+    
+    @FXML
+    private Label nameLabel3;
+
+    @FXML
+    private Label levelLabel3;
+
+    @FXML
+    private VBox schatzVBox3;
+
+    @FXML
+    private Pane heldPane3;
+
+    @FXML
+    private Pane spielerPane3;
+    
+    //@FXML
+    //private Button auswahlBestaetigenButton;
+
+    @FXML
+    private Button muenuButton;
+
+    @FXML
+    private Button speichernButton;
+
+    @FXML
+    private Button spielBeendenButton;
+
+    @FXML
+    private Button zugBestaetigenButton;
+
+    @FXML
+    private Pane undoPane;
+
+    @FXML
+    private Pane redoPane; 
+    
+    @FXML
+    private Button abenteuerBeendenButton;
+
+    @FXML
+    private Button abenteuerFortsetzenButton;
+    
+    private ArrayList<String> schwarzeWuerfelnPath;
+    private ArrayList<String> weisseWuerfelnPath;
+    private ArrayList<String> schaetzePath;
+    private ArrayList<String> heldenPath;
+    private ArrayList<String> faehigkeiten;
+    
+    private ArrayList<SpielerGUI> spielerGUIList;
+    
+    private ArrayList<Quelle> selectedObjects;
+    
+    private MasterController masterController;
+    
+    private static final double HELD_WIDTH = 140;
+    private static final double HELD_HEIGHT = 185;
+    private static final double WUERFEL_WIDTH = 74;
+    private static final double WUERFEL_HEIGHT = 74;
+    private static final double SCHATZ_WIDTH = 54;
+    private static final double SCHATZ_HEIGHT = 54;
+    
+    private MyEventHandler myEventHandler;
+    
+    // Pane, die genutzt wird, wenn keine Gefährten im Friedhof sind
+    private QuellePane platzhalterPane;
+    
+    // Handler für einfügen blaue Rand im PlatzhalterPane, wenn sie gewählt wird
+    class PlatzhalterHandler implements EventHandler<MouseEvent> {
+    	@Override
+    	public void handle(MouseEvent event) {
+			Quelle sObj = platzhalterPane.getQuelle();
+    		
+    		int seite = sObj.alsWuerfel().getWeisseWuerfelseite().ordinal();
+			sObj.alsWuerfel().setWeisseWuerfelseite(WeisseWuerfelseite.values()[(seite+1)%6]);
+			platzhalterPane.setBackground(createBackground(
+        			weisseWuerfelnPath.get(sObj.alsWuerfel().getWeisseWuerfelseite().ordinal()),
+        			WUERFEL_WIDTH,
+        			WUERFEL_HEIGHT)
+        	);
+			
+    	}
+    }
+    
+    // Handler für einfügen blaue Rand im Pane(Wuerfel oder Held), wenn sie gewählt wird
+    class MyEventHandler implements EventHandler<MouseEvent> {
+    	@Override
+    	public void handle(MouseEvent event) {
+    		List<Wuerfel> friedhof = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getFriedhof();
+    		Pane pane = (Pane)event.getSource();
+    		
+    		// Ueberprüfen, ob Pane Wurfel ist, HeldPane hat ID
+    		if (pane.getId() == null) {
+    			QuellePane qPane = (QuellePane)pane;
+    			Quelle sObj = qPane.getQuelle();
+    			
+    			boolean contains = false;
+    			for(int i = 0; i < friedhof.size(); i++) {
+					if(friedhof.get(i) == sObj) {
+						contains = true;
+						break;
+					}
+				}
+				
+    			if(selectedObjects.size() == 1 && contains) {
+    				int seite = sObj.alsWuerfel().getWeisseWuerfelseite().ordinal();
+    				sObj.alsWuerfel().setWeisseWuerfelseite(WeisseWuerfelseite.values()[(seite+1)%6]);
+    				qPane.setBackground(createBackground(
+    	        			weisseWuerfelnPath.get(sObj.alsWuerfel().getWeisseWuerfelseite().ordinal()),
+    	        			WUERFEL_WIDTH,
+    	        			WUERFEL_HEIGHT)
+    	        	);
+    			}
+    			else {
+    				boolean gefunden = false;
+    				for(int i = 0; i < selectedObjects.size(); i++) {
+    					if(selectedObjects.get(i) == sObj) {
+    						selectedObjects.remove(i);
+    						gefunden = true;
+    						break;
+    					}
+    				}
+    				if (!gefunden) {
+	    				selectedObjects.add(sObj);
+	    			} 
+    				
+    				if(pane.getBorder() == null) {
+    	    			pane.setBorder(new Border(new BorderStroke(Color.BLUE, 
+    	    					BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+    	    		} else {
+    	    			pane.setBorder(null);
+    	    		}
+    			}
+    		}
+    		else {
+    			String i = pane.getId();
+    			int ind = Integer.parseInt((i.charAt(i.length() - 1))+"") - 1;
+    			Quelle sObj = masterController.getDungeonRoll().getAktuellerZustand().getSpieler().get(ind).getHeld();
+    			boolean gefunden = false;
+				for(int j = 0; j < selectedObjects.size(); j++) {
+					if(selectedObjects.get(j) == sObj) {
+						selectedObjects.remove(j);
+						gefunden = true;
+						break;
+					}
+				}
+				if (!gefunden) {
+    				selectedObjects.add(sObj);
+    			} 
+    			
+    			if(pane.getBorder() == null) {
+	    			pane.setBorder(new Border(new BorderStroke(Color.BLUE, 
+	    					BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+	    		} else {
+	    			pane.setBorder(null);
+	    		}
+    		}
+    		
+    	}
+    }
+    
+    // Setzen master Controller, initialisieren Elemente, myEventHandler, starten die Musik
+    public void setMasterController(MasterController mC) {
+    	System.out.println("Wurde ausgeführt!");
+    	this.masterController = mC;
+    	
+    	myEventHandler = new MyEventHandler();
+    	
+    	initSchwarzeWuerfelnPath();
+    	masterController.setSpielfeldController(this);
+    	initWeisseWuerfelnPath();
+    	initSchaetzePath();
+    	initHeldenPath();
+    	initSpielerPanes();
+    	initFaehigkeiten();
+    	initPlatzhalter();
+    	
+    	selectedObjects = new ArrayList<Quelle>();
+    	
+    	refresh();
+    }
+    
+    private void initSpielerPanes() {
+    	spielerGUIList = new ArrayList<SpielerGUI>();
+    	spielerGUIList.add(new SpielerGUI(spielerPane1, heldPane1, nameLabel1, levelLabel1, schatzVBox1, new Tooltip()));
+    	spielerGUIList.add(new SpielerGUI(spielerPane2, heldPane2, nameLabel2, levelLabel2, schatzVBox2, new Tooltip()));
+    	spielerGUIList.add(new SpielerGUI(spielerPane3, heldPane3, nameLabel3, levelLabel3, schatzVBox3, new Tooltip()));
+    	spielerGUIList.add(new SpielerGUI(spielerPane4, heldPane4, nameLabel4, levelLabel4, schatzVBox4, new Tooltip()));
+    	
+    	List<Spieler> spielerList = masterController.getDungeonRoll().getAktuellerZustand().getSpieler();
+    	   	    	
+    	for(int i = 0;i < spielerList.size();i++) {
+    		SpielerGUI spielerGUI = spielerGUIList.get(i);
+    		Spieler spieler = spielerList.get(i);
+    		spielerGUI.getNameLabel().setText(spieler.getName());
+    		
+    		SpielerWerte spw = spieler.getSpielerWerte();    		
+    		Integer value = Integer.valueOf(spw.getErfahrungspunkte());
+    		spielerGUI.getLevelLabel().setText(value.toString());
+    		spielerGUI.getHeldPane().setOnMouseClicked(myEventHandler);
+    		spielerGUI.getHeldPane().setBackground(createBackground(heldenPath.get(spieler.getHeld().getHeldtyp().ordinal()), HELD_WIDTH, HELD_HEIGHT));	
+    	}
+    	
+    	for(int i = spielerList.size();i < 4;i++) {
+    		spielerGUIList.get(i).getSpielerPane().setDisable(true);
+    	}
+    }
+    
+    
+    
+    private void addPanesToGridPane(GridPane gridPane, List<Pane> list, int rowN, int columnN) {
+    	int i = 0;
+    	int j = 0;
+    	
+    	gridPane.getChildren().clear();
+    	for(Pane pane : list) {
+    		gridPane.add(pane, j, i);
+    		j++;
+    		if (j == columnN) {
+    			i++;
+    			j = 0;
+    		}
+    	}
+    }
+    
+    public void refresh() {
+    	Spielzustand spielzustand = masterController.getDungeonRoll().getAktuellerZustand();
+ 
+    	// Ändern die Information über alle Spielern
+    	List<Spieler> spielerList = masterController.getDungeonRoll().getAktuellerZustand().getSpieler();   
+    	int aktuellerSpieler = spielzustand.getSpielerIndex();
+    	
+    	for(int i = 0; i < spielerList.size(); i++) {
+    		Spieler spieler = spielerList.get(i);
+            Held held = spieler.getHeld();
+    		int spielerLevel = spieler.getSpielerWerte().getErfahrungspunkte();
+                       
+            List<Schatz> freuhGesammelteSchaetze = spielerList.get(i).getSpielerWerte().getSchaetze();
+            List<Schatz> schatz = new ArrayList<Schatz>(freuhGesammelteSchaetze);
+            if (i == aktuellerSpieler && spielzustand.getAbenteuer() != null) {
+            	List<Schatz> jetztGesammelteSchaetze = spielzustand.getAbenteuer().getSpielerWerte().getSchaetze();
+            	schatz.addAll(jetztGesammelteSchaetze);
+            }
+            
+            SpielerGUI spielerGui = spielerGUIList.get(i);
+            spielerGui.getLevelLabel().setText(Integer.valueOf(spielerLevel).toString() + (held.isLevelUp() ? " (LevelUp)" : ""));
+            spielerGui.getTooltip().setText(faehigkeiten.get(spieler.getHeld().getHeldtyp().ordinal() * 2 + (held.isLevelUp() ? 1 : 0)));
+            VBox vbox = spielerGui.getSchatzVBox();
+            vbox.getChildren().clear();
+            for(Schatz sc : schatz) {
+            	if (sc == null) {
+            		continue;
+            	}
+            	QuellePane pane = new QuellePane(sc);
+            	pane.setPrefWidth(SCHATZ_WIDTH);
+            	pane.setPrefHeight(SCHATZ_HEIGHT + 5);
+            	pane.setOnMouseClicked(myEventHandler);
+            	pane.setBackground(createBackground(
+            			schaetzePath.get(sc.ordinal()),
+            			SCHATZ_WIDTH,
+            			SCHATZ_HEIGHT)
+            	);
+            	vbox.getChildren().add(pane);
+            }            
+            spielerGui.getSpielerPane().setDisable(i != aktuellerSpieler);
+            
+            // erzeugt Bild neben Spielerpunkte, falls er ultimative Fähigkeit nicht 
+            // eingesetzt hat. Andrerfalls löscht er den Bild
+            if(!spielerList.get(i).getHeld().isUltimativeEingesetzt()) {
+            	Pane ultimativePane = new Pane();
+            	ultimativePane.setBackground(createBackground("Bilder/ultimate.png", 20, 20));
+            	ultimativePane.setPrefWidth(29);
+            	ultimativePane.setPrefHeight(29);
+            	ultimativePane.relocate(107, 150);
+            	spielerGui.getHeldPane().getChildren().add(ultimativePane);
+            } else {
+            	spielerGui.getHeldPane().getChildren().clear();
+            }
+    	}
+        
+    	//der Spieler Wert gehört zu Spielzustand
+    	int level = 0;
+    	if(spielzustand.getAbenteuer() == null) {
+    		//level = spielzustand.getSpieler().get(lastSpieler).getSpielerWerte().getErfahrungspunkte();
+            //dungeonLabel.setText(Integer.valueOf(level).toString());
+            return;	
+    	} else {
+    		level = spielzustand.getAbenteuer().getLevel();
+    	}
+    	
+    	if( this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer() != null&&
+    			this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getPhase()==Phase.UMGRUPPIERUNGSPHASE&&
+    			this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getSpielertyp()==Spielertyp.MENSCHLICH) {
+			Alert alert = new Alert(AlertType.INFORMATION);
+			alert.setTitle("Remainder");
+			alert.setHeaderText("");
+			alert.setContentText("Umgruppierungsphase.\n Give your next Choice!");
+			alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+			alert.showAndWait();
+			}
+        dungeonLabel.setText(Integer.valueOf(level).toString());
+    	
+    	List<Wuerfel> friedhof = spielzustand.getAbenteuer().getFriedhof();
+    	List<Wuerfel> drachen = spielzustand.getAbenteuer().getDrachen();
+    	List<Wuerfel> dungeon = spielzustand.getAbenteuer().getDungeon();
+    	List<Wuerfel> gefaerten = spielzustand.getAbenteuer().getGefaehrten();
+    	
+        ArrayList<Pane> dungeonList = new ArrayList<Pane>();
+        ArrayList<Pane> drachenList = new ArrayList<Pane>();
+        ArrayList<Pane> friedhofList = new ArrayList<Pane>();
+        ArrayList<Pane> gefaertenList = new ArrayList<Pane>();
+        
+        friedhofList.add(platzhalterPane);
+        for(Wuerfel w : friedhof) {
+        	if (w == null) {
+        		continue;
+        	}
+        	QuellePane pane = new QuellePane(w);
+        	pane.setOnMouseClicked(myEventHandler);
+        	pane.setBackground(createBackground(
+        			weisseWuerfelnPath.get(w.getWeisseWuerfelseite().ordinal()),
+        			WUERFEL_WIDTH,
+        			WUERFEL_HEIGHT)
+        	);
+        	friedhofList.add(pane);
+        }
+        
+        for(Wuerfel w : gefaerten) {   
+        	if (w == null) {
+        		continue;
+        	}     	
+        	QuellePane pane = new QuellePane(w);
+        	pane.setOnMouseClicked(myEventHandler);
+        	pane.setBackground(createBackground(
+        			weisseWuerfelnPath.get(w.getWeisseWuerfelseite().ordinal()),
+        			WUERFEL_WIDTH,
+        			WUERFEL_HEIGHT)
+        	);
+        	gefaertenList.add(pane);
+        }
+        
+        for(Wuerfel w : dungeon) {   
+        	if (w == null) {
+        		continue;
+        	}     	
+        	QuellePane pane = new QuellePane(w);
+        	pane.setOnMouseClicked(myEventHandler);
+        	pane.setBackground(createBackground(
+        			schwarzeWuerfelnPath.get(w.getSchwarzeWuerfelseite().ordinal()),
+        			WUERFEL_WIDTH,
+        			WUERFEL_HEIGHT)
+        	);
+        	dungeonList.add(pane);
+        }
+        
+        for(Wuerfel w : drachen) {  
+        	if (w == null) {
+        		continue;
+        	}      	
+        	QuellePane pane = new QuellePane(w);
+        	pane.setOnMouseClicked(myEventHandler);
+        	pane.setBackground(createBackground(
+        			schwarzeWuerfelnPath.get(w.getSchwarzeWuerfelseite().ordinal()),
+        			WUERFEL_WIDTH,
+        			WUERFEL_HEIGHT)
+        	);
+        	drachenList.add(pane);
+        }
+          
+        addPanesToGridPane(friedhofGridPane, friedhofList, 2, 5);
+        addPanesToGridPane(gefaerteGridPane, gefaertenList, 3, 3);
+        addPanesToGridPane(monsterGridPane, dungeonList, 3, 3);
+        addPanesToGridPane(huelleGridPane, drachenList, 1, 3);
+        
+        // Setzen einige Button an disable
+        //Phase aktuellePhase = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getPhase();
+        //auswahlBestaetigenButton.setDisable(!(aktuellePhase == Phase.PLUENDERPHASE));
+        //abenteuerBeendenButton.setDisable(!(aktuellePhase == Phase.UMGRUPPIERUNGSPHASE));
+        //abenteuerFortsetzenButton.setDisable(!(aktuellePhase == Phase.UMGRUPPIERUNGSPHASE));
+        
+        selectedObjects.clear();
+        selectedObjects.add(platzhalterPane.getQuelle());                
+    }
+    
+    private Background createBackground(String filepath, double width, double height) {
+    	
+    	BackgroundSize backgroundSize = new BackgroundSize(width, height, false, false, false, false);
+    	Image img = new Image(getClass().getResource(filepath).toExternalForm());
+    	return new Background(new BackgroundImage(
+    			img,
+    			BackgroundRepeat.NO_REPEAT,
+    			BackgroundRepeat.NO_REPEAT,
+    			BackgroundPosition.CENTER,
+    			backgroundSize));
+    }
+     
+    @FXML
+    public void tipp() {
+    	masterController.getkIController().tippHolen(masterController.getDungeonRoll().getAktuellerZustand());
+    }
+    
+    //@FXML
+    //public void auswahlBestaetigen(ActionEvent event) {
+    //	masterController.getAbenteuerController().phaseWechseln();
+    //}
+
+    @FXML
+    public void heldClicked(MouseEvent event) {
+
+    }
+
+	@FXML
+	public void speichern(ActionEvent event) {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Datei zum Exportieren auswählen");
+		fileChooser.getExtensionFilters().addAll(new ExtensionFilter("DungeonRoll-Spielstand", "*.dunro"));
+		File file = fileChooser.showSaveDialog(new Stage());
+		if (file == null)
+			return;
+		else {
+			if (file.getName().length() < 7) {
+				file = new File(file.getAbsolutePath() + ".dunro");
+			} else if (!file.getName().substring(file.getName().length() - 6).equals(".dunro")) {
+				file = new File(file.getAbsolutePath() + ".dunro");
+			}
+			if (!masterController.getSpeicherController().spielSpeichern(file.getAbsolutePath())) {
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.setTitle("Fehler");
+				alert.setHeaderText("");
+				alert.setContentText("Beim Speichern ist leider ein Fehler aufgetreten.");
+				alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+				alert.showAndWait();
+			} else {
+				Alert alert = new Alert(AlertType.INFORMATION);
+				alert.setTitle("Erfolg");
+				alert.setHeaderText("");
+				alert.setContentText("Der Spielstand wurde erfolgreich gespeichert!");
+				alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+				alert.showAndWait();
+			}
+		}
+	}
+
+	@FXML
+	public void spielBeenden(ActionEvent event) {
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setTitle("Beenden");
+		alert.setHeaderText("Sie beenden das Spiel. Nicht gespeicherte Daten gehen verloren.");
+		alert.setContentText("Möchten Sie das Spiel wirklich beenden?");
+
+		Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == ButtonType.OK) {
+			masterController.spielBeenden();
+			FXMLLoader loader = new FXMLLoader();
+			try {
+				loader.setLocation(getClass().getResource("/gui/startbildschirm/Startbildschirm.fxml"));
+				Parent root = loader.load();
+
+				StartbildschirmController controller = loader.getController();
+				controller.setMasterController(masterController);
+				controller.setFortsetzenMoeglich(false);
+
+				anchorPane.getChildren().clear();
+				anchorPane.getChildren().add(root);
+			}
+
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+    @FXML
+    public void toMeunu(ActionEvent event) {
+    	FXMLLoader loader = new FXMLLoader();
+		try {
+			loader.setLocation(getClass().getResource("/gui/startbildschirm/Startbildschirm.fxml"));
+			Parent root = loader.load();
+
+			StartbildschirmController controller = loader.getController();
+			controller.setMasterController(masterController);
+			controller.setFortsetzenMoeglich(true);
+
+			anchorPane.getChildren().clear();
+			anchorPane.getChildren().add(root);
+		}
+
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+    }
+
+    @FXML
+    public void zugBestaetigen(ActionEvent event) {    	
+    	boolean zugerlaubt = masterController.getAuswahlController().auswahlPruefenUndAusfuehren(selectedObjects);
+    	if(!zugerlaubt){
+    		Alert alert = new Alert(AlertType.INFORMATION);
+			alert.setTitle("Zug nicht erlaubt");
+			alert.setHeaderText("");
+			alert.setContentText("Die Auswahl entspricht keinem gültigen Zug!");
+			alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+			alert.showAndWait();
+    	}
+    	refresh();
+    }      
+
+    @FXML
+    void abenteuerBeenden(ActionEvent event) {
+    	masterController.getAbenteuerController().abenteuerBeenden();
+
+		if (this.masterController.getDungeonRoll().getAktuellerZustand().getSpielerIndex()==0 &&
+				this.masterController.getDungeonRoll().getAktuellerZustand().getRunde() >= this.masterController.getDungeonRoll().getAktuellerZustand().getMaxRunde()) {
+			this.masterController.spielBeenden();
+			toMeunu(event);
+			return;
+		}
+		
+		if (this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer() == null&&
+    			this.masterController.getDungeonRoll().getAktuellerZustand().getSpielerIndex()==this.masterController.getDungeonRoll().getAktuellerZustand().getSpieler().size()-1&&
+    			this.masterController.getDungeonRoll().getAktuellerZustand().getRunde()==this.masterController.getDungeonRoll().getAktuellerZustand().getMaxRunde()) {
+			this.masterController.spielBeenden();
+			toMeunu(event);
+			return;
+		}
+		
+    	refresh();
+    }
+
+    @FXML
+    void abenteuerFortsetzen(ActionEvent event) {
+    	if( this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer() != null&&
+    			this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getPhase()==Phase.UMGRUPPIERUNGSPHASE) {
+    		masterController.getAbenteuerController().naechstesLevel();
+    	}
+    	else if(this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getPhase()== Phase.PLUENDERPHASE&&
+    			this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon().stream().anyMatch(wuerfel->
+    			wuerfel.getSchwarzeWuerfelseite()==SchwarzeWuerfelseite.TRANK || wuerfel.getSchwarzeWuerfelseite()==SchwarzeWuerfelseite.TRUHE))
+    	{
+    		this.masterController.getAbenteuerController().plunderPhase_verzichten();
+    	}
+    	
+    	if (this.masterController.getDungeonRoll().getAktuellerZustand().getSpielerIndex()==0 &&
+				this.masterController.getDungeonRoll().getAktuellerZustand().getRunde() >= this.masterController.getDungeonRoll().getAktuellerZustand().getMaxRunde()) {
+			this.masterController.spielBeenden();
+			toMeunu(event);
+		}
+    	if(this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer() == null) {
+    		this.masterController.getAbenteuerController().neuesAbenteuerErstellen();
+    	}
+    	
+    	
+    	refresh();
+    }
+    
+    @FXML
+    public void redo(MouseEvent event) {
+    	masterController.redo();
+    	refresh();
+    }
+
+    @FXML
+    public void undo(MouseEvent event) {
+    	masterController.undo();
+    	refresh();
+    }
+    
+    private void initPlatzhalter() {
+    	Wuerfel w = new Wuerfel(true);
+    	w.setWeisseWuerfelseite(WeisseWuerfelseite.CHAMPION);
+    	platzhalterPane = new QuellePane(w);    	
+    	platzhalterPane.setId("platzhalter");
+    	platzhalterPane.setOnMouseClicked(new PlatzhalterHandler());
+    	platzhalterPane.setBorder(new Border(new BorderStroke(Color.BLACK, 
+				BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+    	platzhalterPane.setBackground(createBackground(weisseWuerfelnPath.get(0), WUERFEL_WIDTH, WUERFEL_HEIGHT));
+    	
+    	Pane textPane = new Pane();
+    	textPane.setAccessibleText("zum Trank");
+    	textPane.setBackground(createBackground("Bilder/SchwarzerWuerfel/WuerfelTrank.png", 29, 29));
+    	textPane.setPrefWidth(29);
+    	textPane.setPrefHeight(29);
+    	textPane.relocate(89, 55);
+    	platzhalterPane.getChildren().add(textPane);
+    }
+    
+    private void initSchwarzeWuerfelnPath() {
+    	schwarzeWuerfelnPath = new ArrayList<String>();
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/WuerfelTrank.png");
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/Drachenkopf.png");
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/Truhe.png");
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/Kobold.png");
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/Skelett.png");
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/Schleimmonster.png");
+    }
+    
+    private void initWeisseWuerfelnPath() {
+    	weisseWuerfelnPath = new ArrayList<String>();
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Champion.png");
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Krieger.png");
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Priester.png");
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Zauberer.png");
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Dieb.png");
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/WuerfelSpruchrolle.png");
+    }
+    
+    private void initSchaetzePath() {
+    	schaetzePath = new ArrayList<String>();
+    	schaetzePath.add("Bilder/Schatzmarker/Spruchrolle.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Drachenschuppen.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Diebeswerkzeug.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Drachenkoeder.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Koepferklinge.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Talisman.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Stadtportal.png");
+    	schaetzePath.add("Bilder/Schatzmarker/ZepterDerMacht.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Trank.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Unsichtbarkeit.png");
+    }
+    
+    private void initHeldenPath() {
+    	heldenPath = new ArrayList<String>();
+    	heldenPath.add("Bilder/Helden/Kreuzritterin_Paladinin.png");
+    	heldenPath.add("Bilder/Helden/Minnesaenger_Barde.png");
+    	heldenPath.add("Bilder/Helden/Ritter_Drachentoeter.png");
+    	heldenPath.add("Bilder/Helden/Soeldner_Kommandant.png");
+    	heldenPath.add("Bilder/Helden/HalbKobold_Haeuptling.png");
+    	heldenPath.add("Bilder/Helden/ArkanerSchwertmeister_Kampfmagier.png");
+    	heldenPath.add("Bilder/Helden/Adeptin_Hexe.png");
+    	heldenPath.add("Bilder/Helden/Okkultistin_Totenbeschwoererin.png");
+    }
+    
+    private void initFaehigkeiten() {
+    	faehigkeiten = new ArrayList<String>();
+    	
+    	faehigkeiten.add("Kreuzritterin\n"
+			+ "Spezialfähigkeit: Priester können als Krieger benutzt werden und Krieger als Priester.\n"
+            + "Ultimative Fähigkeit: Heiliger Schlag: Die Kreuzritterin darf 1x pro Dungeonabenteuer\n entweder als Priester oder als Krieger verwendet werden.");
+    	faehigkeiten.add("Paladinin\n"
+    		+ "Spezialfähigkeit: Priester koennen als Krieger benutzt werden und Krieger als Priester"
+    		+ "Ultimative Fähigkeit: Goettliche Intervention: Lege 1 Schatzmarker ab, um alle Monster zu besiegen,\n alle Kisten zu oeffnen, alle Traenke zu konsumieren\n"
+    		+ " und alle Wuerfel in der Drachenhoehle abbzulegen. Dies zaehlt nicht als das Besiegen des Drachen,\n und du ziehst keine Schaetze und bekommst auch keine Ehrfaherung.\n"
+    	    + " Du darfst jedoch fuer jede geoefnnete Kiste 1 Schatz ziehen.");
+    	
+    	faehigkeiten.add("Minnesaenger\n"
+    		+ "Spezialfähigkeit: Diebe koennen als Zauberer benutzt werden und Zauberer als Diebe.\n"
+    		+ "Ultimative Fähigkeit: Bardenlied: Die Musik zaehmt die wilde Bestie!\n Lege alle Wuerfel in der Drachenhoehle ab.\n"
+    		+ " Dies zaehlt nicht als das Besiegen des Drachen,\n und du ziehst auch keine Schaetze und bekommst auch keine Erfahrung.");
+    	faehigkeiten.add("Barde\n"
+    		+ "Spezialfähigkeit: Diebe koennen als Zauberer benutzt werden und Zauberer als Diebe.\n Champions besiegen 1 zusaetzliches Monster einer beliebigen Art,\n"
+    		+ " d.h. 1 zusaetzlicher Dungeonwuerfel eines Monsters wird abgelegt.\n Denke daran: Wuerfel in der Drachenhoehle sind keine Monster!\n"
+    		+ " Ultimative Fähigkeit: Bardenlied: Lege alle Wuerfel in der Drachenhoehle ab.");
+    	
+    	faehigkeiten.add("Ritter\n"
+    		+ "Spezialfähigkeit: Beim Zusammenstellen der Gruppe werden alle Spruchrollen sofort zu Champions.\n Spaeter erhaltene Spruchrollen\n"
+    		+ " (etwa durch die Benutzung eines Trankes oder eines Schatzes) sind davon nicht betroffen."
+    		+ "Ultimative Fähigkeit: Kriegsschrei: Ein schreckliches Geheul jagt alle Monster aus dem Dungeon\n weckt aber den Drachen. Verwandle alle Monster in Drachenkoepfe\n"
+    		+ " und lege sie in die Drachenhoehle.");
+    	faehigkeiten.add("Drachentoeter\n"
+    		+ "Spezialfähigkeit: Beim Zusammenstellen der Gruppe werden alle Spruchrollen sofort zu Champions.\n Du benoetigst nur 2 verschiedene Gefaehrten,\n"
+    		+ " um den Drachen zu besiegen (anstelle von 3).\n"
+    		+ "Ultimative Fähigkeit: Kriegsschrei: Verwandle alle Monster in Drachenkoepfe und lege sie in die Drachenhoehle.");
+    	
+    	faehigkeiten.add("Soeldner\n"
+    		+ "Spezialfähigkeit: Wenn du die Gruppe Zusammenstellst,\n"
+    		+ " darfst du eine beliebige Anzahl von Gruppenwuerfeln einmal neu rollen.\n"
+    		+ "Ultimative Fähigkeit: Gezielter Schlag: Besiege 2 beliebige Monster.\n"
+    		+ " Denke daran: Wuerfel in der Drachenhoehle sind keine Monster.");
+    	faehigkeiten.add("Kommandant\n"
+    		+ "Spezialfähigkeit: Krieger besiegen 1 zusaetzliches Monster einer beliebigen Art,\n"
+    		+ " d.h. 1 zusaetzlicher Dungeonwuerfel eines Monsters wird abgelegt.\n Denke daran: Wuerfel in der Drachenhoehle sind keine Monster!\n"
+    		+ "Ultimative Fähigkeit: Praesenz auf dem Schlachtfeld: Rolle eine beliebige Anzahl von Gruppen- und Dungeonwuerfeln neu.");
+    	
+    	faehigkeiten.add("HalbKobold\n"
+    		+ "Spezialfähigkeit: Du darfst jederzeit wahrend der Monsterphase Kisten oeffnen und Traenke konsumieren\n"
+    		+ " - auch dann, wenn die Monster noch nicht besiegt sind!\n"
+    		+ " Die entsprechenden Gruppenwuerfel musst du wie sonst auch ausgeben.\n"
+    		+ "Ultimative Fähigkeit: Um Hilfe rufen: Verwandle 1 Kobold in 1 Dieb,\n der wie ein Gruppenwuerfel benutzt werden kann.\n"
+    		+ " Lege diesen in der naechsten Umgruppierungsphase ab.");
+    	faehigkeiten.add("Haeuptling\n"
+    		+ "Spezialfähigkeit: Du darfst jederzeit wahrend der Monsterphase Kisten oeffnen\n"
+    		+ " und Traenke konsumieren - auch dann, wenn die Monster noch nicht besiegt sind!\n Die entsprechenden Gruppenwuerfel musst du wie sonst auch ausgeben.\n"
+    		+ "Ultimative Fähigkeit: Den Chef herauskennen: Verwandle 2 Kobold in 2 Dieb,\n der wie ein Gruppenwuerfel benutzt werden kann.\n"
+    		+ " Lege diesen in der naechsten Umgruppierungsphase ab.");
+    	
+    	faehigkeiten.add("ArkanerSchwertmeister\n"
+    		+ "Spezialfähigkeit: Krieger koennen als Zauberer benutzt werden und Zauberer als Krieger.\n"
+    		+ "Ultimative Fähigkeit: Arkane Klinge: Der Arkane Schwertmeister darf wie ein Zauberer\n oder ein Krieger benutzt werden.");
+    	faehigkeiten.add("Kampfmagier\n"
+    		+ "Spezialfähigkeit: Krieger koennen als Zauberer benutzt werden und Zauberer als Krieger.\n"
+    		+ "Ultimative Fähigkeit: Arkane Raserei: Lege alle Dungeonwuerfel ab. Monster, Traenke, Kisten\n und die Wuerfel in der Drachenhoehle kehren in den Vorrat zurueck.\n"
+    		+ " Dies zaehlt nicht als das Besiegen des Drachen;\n du ziehst keine Schaetze, darfst die Traenke nicht konsumieren,\n keine Gefaehrten wiedererwecken,\n"
+    		+ " und du bekommst auch keine Erfahrung.");
+    	
+    	faehigkeiten.add("Adeptin\n"
+    		+ "Spezialfähigkeit: Spruchrollen duerfen wie ein beliebiger Gefaehrte benutzt werden.\n Du darfst als Adeptin 3 Spruchrollen benutzen, um den Drachen zu besiegen.\n"
+    		+ "Ultimative Fähigkeit: Verzaubern: Verwandle 1 Monster in 1 Trank.\n"
+    		+ " Lege dazu einen der beiden Dungeonwuerfel zurueck in den Vorrat und drehe den anderen auf die Trankseite.");
+    	faehigkeiten.add("Hexe\n"
+    		+ "Spezialfähigkeit: Spruchrollen duerfen wie ein beliebiger Gefaehrte benutzt werden.\n"
+    		+ " Du darfst als Adeptin 3 Spruchrollen benutzen, um den Drachen zu besiegen.\n"
+    		+ "Ultimative Fähigkeit: Verzaubern: Verwandle 2 Monster in 1 Trank.\n"
+    		+ " Lege dazu einen der beiden Dungeonwuerfel zurueck in den Vorrat und drehe den anderen auf die Trankseite.");
+    	
+    	faehigkeiten.add("Okkultistin\n"
+    		+ "Spezialfähigkeit: Priester koennen als Zauberer benutzt werden und Zauberer als Priester.\n"
+    		+ "Ultimative Fähigkeit: Tote beleben: Verwandle 1 Skelett in 1 Krieger,\n der wie ein Gruppenwuerfel benutzt wird.\n"
+    		+ " Lege ihn in der naechsten Umgruppierungsphase ab.");
+    	faehigkeiten.add("Totenbeschwoererin\n"
+    		+ "Spezialfähigkeit: Priester koennen als Zauberer benutzt werden und Zauberer als Priester.\n"
+    		+ "Ultimative Fähigkeit: Herrin ueber die Toten: Verwandle 2 Skelett in 2 Krieger,\n"
+    		+ " der wie ein Gruppenwuerfel benutzt wird. Lege ihn in der naechsten Umgruppierungsphase ab.");
+    }
+}

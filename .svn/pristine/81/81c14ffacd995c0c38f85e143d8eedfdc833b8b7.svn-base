@@ -1,0 +1,76 @@
+.anchor {
+    -fx-background-image:url("Bilder/table.jpg");
+    -fx-background-repeat: stretch;   
+    -fx-background-position: center center;
+	-fx-background-size: cover;
+}
+
+.dungeonCube {
+    -fx-background-image:url("Bilder/romb.png");
+    -fx-background-repeat: stretch;   
+    -fx-background-position: center center;
+	-fx-background-size: cover;    
+}
+
+.gefaehrten {
+    -fx-background-image:url("Bilder/knights3.jpg");
+    -fx-background-repeat: stretch;   
+    -fx-background-position: center center;
+	-fx-background-size: cover;    
+}
+
+.gegner {
+    -fx-background-image:url("Bilder/orks.jpg");
+    -fx-background-repeat: stretch;   
+    -fx-background-position: center center;
+	-fx-background-size: cover;
+}
+
+.playerPane {
+    -fx-background-image:url("Bilder/perg1.jpg");
+    -fx-background-repeat: stretch;   
+    -fx-background-position: center center;
+	-fx-background-size: cover;
+}
+
+.cave {
+    -fx-background-image:url("Bilder/Battleback_cave_d.png");
+    -fx-background-repeat: stretch;   
+    -fx-background-position: center center;
+	-fx-background-size: cover;
+}
+
+.graveyard {
+    -fx-background-image:url("Bilder/Graveyard.jpg");
+    -fx-background-repeat: stretch;   
+    -fx-background-position: center center;
+	-fx-background-size: cover;
+}
+
+.wuerfelnSchaetze {
+    -fx-background-image:url("Bilder/WeisserWuerfel/Champion.png"); 
+    -fx-background-size: 55, 55;
+    -fx-background-position: center center;
+	-fx-background-repeat: no-repeat;
+}
+
+.helden1 {
+    -fx-background-image:url("Bilder/Helden/Adeptin_Hexe.png"); 
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+	-fx-background-repeat: no-repeat;
+}
+
+.undo {
+    -fx-background-image:url("Bilder/arrow-l.png"); 
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+	-fx-background-repeat: no-repeat;
+}
+
+.redo {
+    -fx-background-image:url("Bilder/arrow-r.png"); 
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+	-fx-background-repeat: no-repeat;
+}

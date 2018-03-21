@@ -1,0 +1,315 @@
+package gui.spielfeld;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import model.Held;
+import model.Heldtyp;
+import model.Spieler;
+import model.SpielerWerte;
+import model.Spielertyp;
+import control.MasterController;
+
+public class SpielfeldController {
+
+    @FXML
+    private Label nameLabel1;
+
+    @FXML
+    private Label levelLabel1;
+
+    @FXML
+    private VBox schatzVBox1;
+
+    @FXML
+    private Pane heldPane1;
+
+    @FXML
+    private Pane spielerPane1;
+
+    @FXML
+    private GridPane friedhofGridPane;
+
+    @FXML
+    private GridPane huelleGridPane;
+
+    @FXML
+    private Label dungeonLabel;
+
+    @FXML
+    private GridPane gefaerteGridPane;
+
+    @FXML
+    private GridPane monsterGridPane;
+
+    @FXML
+    private Label nameLabel4;
+
+    @FXML
+    private Label levelLabel4;
+
+    @FXML
+    private VBox schatzVBox4;
+
+    @FXML
+    private Pane heldPane4;
+
+    @FXML
+    private Pane spielerPane4;
+    
+    @FXML
+    private Label nameLabel2;
+
+    @FXML
+    private Label levelLabel2;
+
+    @FXML
+    private VBox schatzVBox2;
+
+    @FXML
+    private Pane heldPane2;
+
+    @FXML
+    private Pane spielerPane2;
+    
+    @FXML
+    private Label nameLabel3;
+
+    @FXML
+    private Label levelLabel3;
+
+    @FXML
+    private VBox schatzVBox3;
+
+    @FXML
+    private Pane heldPane3;
+
+    @FXML
+    private Pane spielerPane3;
+    
+    @FXML
+    private Button auswahlBestaetigenButton;
+
+    @FXML
+    private Button muenuButton;
+
+    @FXML
+    private Button speichernButton;
+
+    @FXML
+    private Button spielBeendenButton;
+
+    @FXML
+    private Button zugBestaetigenButton;
+
+    @FXML
+    private Pane undoPane;
+
+    @FXML
+    private Pane redoPane;
+    
+    
+
+    private ArrayList<String> schwarzeWuerfelnPath;
+    private ArrayList<String> weisseWuerfelnPath;
+    private ArrayList<String> schaetzePath;
+    private ArrayList<String> heldenPath;
+    
+    private ArrayList<SpielerGUI> spielerGUIList;
+    
+    private MasterController masterController;
+    
+    
+    public void setMasterController(MasterController mC) {
+    	
+    	this.masterController = mC;
+    	
+    	initSchwarzeWuerfelnPath();
+    	initWeisseWuerfelnPath();
+    	initSchaetzePath();
+    	initHeldenPath();
+    	initSpielerPanes();   	
+    	
+    	
+    	refresh();
+    }
+    
+    public void refresh() {
+    	    	
+    }
+    
+    private void initSpielerPanes() {
+    	spielerGUIList = new ArrayList<SpielerGUI>();
+    	spielerGUIList.add(new SpielerGUI(spielerPane1, heldPane1, nameLabel1, levelLabel1, schatzVBox1));
+    	spielerGUIList.add(new SpielerGUI(spielerPane2, heldPane2, nameLabel2, levelLabel2, schatzVBox2));
+    	spielerGUIList.add(new SpielerGUI(spielerPane3, heldPane3, nameLabel3, levelLabel3, schatzVBox3));
+    	spielerGUIList.add(new SpielerGUI(spielerPane4, heldPane4, nameLabel4, levelLabel4, schatzVBox4));
+    	
+    	// List<Spieler> spielerList = masterController.getDungeonRoll().getAktuellerZustand().getSpieler();
+    	Held held1 = new Held();
+    	held1.setLevelUp(false);
+    	held1.setUltimativeEingesetzt(false);;
+    	held1.setHeldtyp(Heldtyp.HALBKOBOLDHAEUPTLING);
+    	
+    	SpielerWerte spWert1 = new SpielerWerte();
+    	spWert1.setErfahrungspunkte(5);
+    	
+    	Spieler sp1 = new Spieler(), sp2 = new Spieler();    	
+    	sp1.setName("Mikhail");
+    	sp1.setHeld(held1);
+    	sp1.setSpielertyp(Spielertyp.MENSCHLICH);
+    	sp1.setSpielerWerte(spWert1);
+    		
+    	sp2.setName("Dmytro");
+    	sp2.setHeld(held1);
+    	sp2.setSpielertyp(Spielertyp.MENSCHLICH);
+    	sp2.setSpielerWerte(spWert1);
+    	
+    	List<Spieler> spielerList = new ArrayList<Spieler>();
+    	spielerList.add(sp1);
+    	spielerList.add(sp2);
+    	
+    	for(int i = 0;i < spielerList.size();i++) {
+    		SpielerGUI spielerGUI = spielerGUIList.get(i);
+    		Spieler spieler = spielerList.get(i);
+    		spielerGUI.getNameLabel().setText(spieler.getName());
+    		
+    		SpielerWerte spw = spieler.getSpielerWerte();    		
+    		Integer value = Integer.valueOf(spw.getErfahrungspunkte());
+    		spielerGUI.getLevelLabel().setText(value.toString());
+    		
+    		//spielerGUI.getHeldPane().setStyle("-fx-background-image:url(\"" + heldenPath.get(spieler.getHeld().getHeldtyp().ordinal()) + "\");\n" +
+            // "-fx-background-size: cover;\n-fx-background-position: center center;\n-fx-background-repeat: no-repeat;");
+    		spielerGUI.getHeldPane().setStyle("-fx-background-image:url(\"Bilder/Helden/Adeptin_Hexe.png\");");
+    		
+    	/*	Image image = new Image("Bilder/Helden/Kreuzritter.png");
+    		BackgroundSize backgroundSize = new BackgroundSize();
+    		BackgroundImage backgroundImage = new BackgroundImage (image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, backgroundSize);
+    		spielerGUI.getHeldPane().setBackground(new Background(backgroundImage)); */
+    	}
+    	
+    	for(int i = spielerList.size();i < 4;i++) {
+    		spielerGUIList.get(i).getSpielerPane().setDisable(true);
+    	}
+    }
+    
+    private void initSchwarzeWuerfelnPath() {
+    	schwarzeWuerfelnPath = new ArrayList<String>();
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/WuerfelTrank.png");
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/Drachenkopf.png");
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/Truhe.png");
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/Kobold.png");
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/Skelett.png");
+    	schwarzeWuerfelnPath.add("Bilder/SchwarzerWuerfel/Schleimmonster.png");
+    }
+    
+    private void initWeisseWuerfelnPath() {
+    	weisseWuerfelnPath = new ArrayList<String>();
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Champion.png");
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Krieger.png");
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Priester.png");
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Zauberer.png");
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Dieb.png");
+    	weisseWuerfelnPath.add("Bilder/WeisserWuerfel/Spruchrolle.png");
+    }
+    
+    private void initSchaetzePath() {
+    	schaetzePath = new ArrayList<String>();
+    	schaetzePath.add("Bilder/Schatzmarker/Spruchrolle.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Drachenschuppen.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Diebeswerzeug.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Drachenkoeder.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Koepferklinge.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Talisman.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Stadtportal.png");
+    	schaetzePath.add("Bilder/Schatzmarker/ZepterDerMacht.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Trank.png");
+    	schaetzePath.add("Bilder/Schatzmarker/Unsichtbarkeit.png");
+    }
+    
+    private void initHeldenPath() {
+    	heldenPath = new ArrayList<String>();
+    	heldenPath.add("Bilder/Helden/Kreuzritterin_Paladinin.png");
+    	heldenPath.add("Bilder/Helden/Minnesaeger_Barde.png");
+    	heldenPath.add("Bilder/Helden/Ritter_Drachentoeter.png");
+    	heldenPath.add("Bilder/Helden/Soeldner_Kommandant.png");
+    	heldenPath.add("Bilder/Helden/HalbKobold_Haeuptling.png");
+    	heldenPath.add("Bilder/Helden/ArkanerSchwermeister_Kampfmagier.png");
+    	heldenPath.add("Bilder/Helden/Adeptin_Hexe.png");
+    	heldenPath.add("Bilder/Helden/Okkultistin_Totenbeschwoererin.png");
+    }
+    
+    @FXML
+    public void auswahlBestaetigen(ActionEvent event) {
+
+    }
+
+    @FXML
+    public void heldClicked(MouseEvent event) {
+
+    }
+
+    @FXML
+    public void redo(MouseEvent event) {
+    	System.out.println("redo");
+    }
+
+    @FXML
+    public void speichern(ActionEvent event) {
+    	System.out.println("speichern");
+    }
+
+    @FXML
+    public void spielBeenden(ActionEvent event) {
+
+    }
+
+    @FXML
+    public void toMeunu(ActionEvent event) {
+    	
+    	FXMLLoader loader = new FXMLLoader();
+		try {
+			Parent root = loader.load(getClass().getResource("menue.fxml").openStream());
+
+			Stage menueStage = new Stage();
+			menueStage.setScene(new Scene(root));
+			menueStage.setTitle("Menü");
+			menueStage.show();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	
+    }
+
+    @FXML
+    public void undo(MouseEvent event) {
+    	System.out.println("undo");
+    }
+
+    @FXML
+    public void zugBestaetigen(ActionEvent event) {
+
+    }
+        
+
+}

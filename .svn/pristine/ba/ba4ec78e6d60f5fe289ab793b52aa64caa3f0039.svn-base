@@ -1,0 +1,21 @@
+/**
+ * 
+ */
+package control;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+/**
+ * @author sopr102
+ *
+ */
+public class AbenteuerControllerTest {
+
+	@Test
+	public void test() {
+		fail("Not yet implemented");
+	}
+
+}

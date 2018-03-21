@@ -1,0 +1,321 @@
+package control.regeln;
+
+import java.util.ArrayList;
+import java.util.List;
+
+//import com.sun.prism.impl.ps.BaseShaderContext.MaskType;
+
+import control.MasterController;
+import control.RegelController;
+import control.WuerfelController;
+import model.Heldtyp;
+import model.Quelle;
+import model.Schatz;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+public class ErsetzeEinsOderBeliebig extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		// TODO Auto-generated method stub
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		boolean erlaubt = true;
+		List<Wuerfel> zielWuerfel = new ArrayList<Wuerfel>();
+
+		// Ziele als Wuerfelliste
+		for (Ziel aktuellesZiel : ziel) {
+			// aktuelles Ziel muss Wuerfel sein
+			if (aktuellesZiel.alsWuerfel() == null) {
+				return false;
+			} else {
+				// aktuelles Ziel muss schwarzer Wuerfel sein
+				if (aktuellesZiel.alsWuerfel().isWeiss()) {
+					return false;
+				} else { // ZielWuerfel zur Wuerfelliste hinzufuegen
+					zielWuerfel.add(aktuellesZiel.alsWuerfel());
+				}
+			}
+		}
+
+		// Schatz
+		if (quelle.alsSchatz() != null) {
+			Schatz schatz = quelle.alsSchatz();
+			switch (schatz) {
+			case DIEBESWERKZEUG:
+				// Minnesaenger und Barde SF Zauberer und Diebe tauschen
+				if (Heldtyp.MINNESAENGERBARDE == masterController.getDungeonRoll().getAktuellerZustand()
+						.aktuellerSpieler().getHeld().getHeldtyp()) {
+					WuerfelController wuerfelController = masterController.getWuerfelController();
+					Wuerfel zaubererWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(zaubererWuerfel, WeisseWuerfelseite.ZAUBERER);
+					Wuerfel diebWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(diebWuerfel, WeisseWuerfelseite.DIEB);
+
+					erlaubt = new TrankRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel)
+							|| new TrankRegel().pruefeAuswahlErlaubt(diebWuerfel, ziel);
+
+					erlaubt = erlaubt || new KistenOeffnerRegel().pruefeAuswahlErlaubt(diebWuerfel, ziel)
+							|| new KistenOeffnerRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel);
+
+					erlaubt = erlaubt || new MonsterPhasenRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel)
+							|| new MonsterPhasenRegel().pruefeAuswahlErlaubt(diebWuerfel, ziel);
+				}
+				break;
+			case ZEPTERDERMACHT:
+				// Minnesaenger und Barde SF Zauberer und Diebe tauschen
+				if (Heldtyp.MINNESAENGERBARDE == masterController.getDungeonRoll().getAktuellerZustand()
+						.aktuellerSpieler().getHeld().getHeldtyp()) {
+					WuerfelController wuerfelController = masterController.getWuerfelController();
+					Wuerfel zaubererWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(zaubererWuerfel, WeisseWuerfelseite.ZAUBERER);
+					Wuerfel diebWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(diebWuerfel, WeisseWuerfelseite.DIEB);
+
+					erlaubt = new TrankRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel)
+							|| new TrankRegel().pruefeAuswahlErlaubt(diebWuerfel, ziel);
+
+					erlaubt = erlaubt || new KistenOeffnerRegel().pruefeAuswahlErlaubt(diebWuerfel, ziel)
+							|| new KistenOeffnerRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel);
+
+					erlaubt = erlaubt || new MonsterPhasenRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel)
+							|| new MonsterPhasenRegel().pruefeAuswahlErlaubt(diebWuerfel, ziel);
+				} else // Okkultistin und Totenbeschwoererin SF Zauberer und Priester tauschen
+				if (Heldtyp.OKKULTISTINTOTENBESCHWOERERIN == masterController.getDungeonRoll().getAktuellerZustand()
+						.aktuellerSpieler().getHeld().getHeldtyp()) {
+					WuerfelController wuerfelController = masterController.getWuerfelController();
+					Wuerfel zaubererWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(zaubererWuerfel, WeisseWuerfelseite.ZAUBERER);
+					Wuerfel priesterWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(priesterWuerfel, WeisseWuerfelseite.PRIESTER);
+
+					erlaubt = new TrankRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel)
+							|| new TrankRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel);
+
+					erlaubt = erlaubt || new KistenOeffnerRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel)
+							|| new KistenOeffnerRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel);
+
+					erlaubt = erlaubt || new MonsterPhasenRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel)
+							|| new MonsterPhasenRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel);
+				}
+				break;
+			case TALISMAN:
+				// Kreuzritterin und Paladinin SF ist Priester und Krieger zu tauschen
+				if (Heldtyp.KREUZRITTERPALADININ == masterController.getDungeonRoll().getAktuellerZustand()
+						.aktuellerSpieler().getHeld().getHeldtyp()) {
+					WuerfelController wuerfelController = masterController.getWuerfelController();
+					Wuerfel priesterWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(priesterWuerfel, WeisseWuerfelseite.PRIESTER);
+					Wuerfel kriegerWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(kriegerWuerfel, WeisseWuerfelseite.KRIEGER);
+
+					erlaubt = new TrankRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel)
+							|| new TrankRegel().pruefeAuswahlErlaubt(kriegerWuerfel, ziel);
+
+					erlaubt = erlaubt || new KistenOeffnerRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel)
+							|| new KistenOeffnerRegel().pruefeAuswahlErlaubt(kriegerWuerfel, ziel);
+
+					erlaubt = erlaubt || new MonsterPhasenRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel)
+							|| new MonsterPhasenRegel().pruefeAuswahlErlaubt(kriegerWuerfel, ziel);
+				} else // Okkultistin und Totenbeschwoererin SF Zauberer und Priester tauschen
+				if (Heldtyp.OKKULTISTINTOTENBESCHWOERERIN == masterController.getDungeonRoll().getAktuellerZustand()
+						.aktuellerSpieler().getHeld().getHeldtyp()) {
+					WuerfelController wuerfelController = masterController.getWuerfelController();
+					Wuerfel zaubererWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(zaubererWuerfel, WeisseWuerfelseite.ZAUBERER);
+					Wuerfel priesterWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(priesterWuerfel, WeisseWuerfelseite.PRIESTER);
+
+					erlaubt = new TrankRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel)
+							|| new TrankRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel);
+
+					erlaubt = erlaubt || new KistenOeffnerRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel)
+							|| new KistenOeffnerRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel);
+
+					erlaubt = erlaubt || new MonsterPhasenRegel().pruefeAuswahlErlaubt(zaubererWuerfel, ziel)
+							|| new MonsterPhasenRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel);
+				}
+				break;
+			case KOEPFERKLINGE:
+				// Kreuzritterin und Paladinin SF ist Priester und Krieger zu tauschen
+				if (Heldtyp.KREUZRITTERPALADININ == masterController.getDungeonRoll().getAktuellerZustand()
+						.aktuellerSpieler().getHeld().getHeldtyp()) {
+					WuerfelController wuerfelController = masterController.getWuerfelController();
+					Wuerfel priesterWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(priesterWuerfel, WeisseWuerfelseite.PRIESTER);
+					Wuerfel kriegerWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(kriegerWuerfel, WeisseWuerfelseite.KRIEGER);
+
+					erlaubt = new TrankRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel)
+							|| new TrankRegel().pruefeAuswahlErlaubt(kriegerWuerfel, ziel);
+
+					erlaubt = erlaubt || new KistenOeffnerRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel)
+							|| new KistenOeffnerRegel().pruefeAuswahlErlaubt(kriegerWuerfel, ziel);
+
+					erlaubt = erlaubt || new MonsterPhasenRegel().pruefeAuswahlErlaubt(priesterWuerfel, ziel)
+							|| new MonsterPhasenRegel().pruefeAuswahlErlaubt(kriegerWuerfel, ziel);
+				}
+				break;
+			case SPRUCHROLLE:
+				// Adeptin darf Spruchrollen als beliebigen Gefaehrten nutzen
+				if (Heldtyp.ADEPTINHEXE == masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler()
+						.getHeld().getHeldtyp()) {
+					WuerfelController wuerfelController = masterController.getWuerfelController();
+					Wuerfel spruchrollenWuerfel = new Wuerfel(true);
+					wuerfelController.wuerfelseiteErsetzen(spruchrollenWuerfel, WeisseWuerfelseite.SPRUCHROLLE);
+
+					erlaubt = new TrankRegel().pruefeAuswahlErlaubt(spruchrollenWuerfel, ziel);
+
+					erlaubt = erlaubt || new KistenOeffnerRegel().pruefeAuswahlErlaubt(spruchrollenWuerfel, ziel)
+							|| new KistenOeffnerRegel().pruefeAuswahlErlaubt(spruchrollenWuerfel, ziel);
+
+					erlaubt = erlaubt || new MonsterPhasenRegel().pruefeAuswahlErlaubt(spruchrollenWuerfel, ziel)
+							|| new KistenOeffnerRegel().pruefeAuswahlErlaubt(spruchrollenWuerfel, ziel);
+				}
+				break;
+			default:
+				erlaubt = false;
+				break;
+			}
+		} else {
+			erlaubt = false;
+		}
+
+		/*
+		 * // weg // Wuerfel if (quelle.alsWuerfel() != null) { Wuerfel wuerfel =
+		 * quelle.alsWuerfel(); // Quelle muss weisser Wuerfel sein if
+		 * (!wuerfel.isWeiss()) { erlaubt = false; } else { switch
+		 * (wuerfel.getWeisseWuerfelseite()) { case CHAMPION: erlaubt =
+		 * pruefeZielQuelle(WeisseWuerfelseite.CHAMPION, zielWuerfel); break; case DIEB:
+		 * erlaubt = pruefeZielQuelle(WeisseWuerfelseite.DIEB, zielWuerfel); break; case
+		 * KRIEGER: erlaubt = pruefeZielQuelle(WeisseWuerfelseite.KRIEGER, zielWuerfel);
+		 * break; case PRIESTER: erlaubt = pruefeZielQuelle(WeisseWuerfelseite.PRIESTER,
+		 * zielWuerfel); break; case ZAUBERER: erlaubt =
+		 * pruefeZielQuelle(WeisseWuerfelseite.ZAUBERER, zielWuerfel); break; default:
+		 * erlaubt = false; break; } } }
+		 */
+
+		return erlaubt;
+	}
+
+	/*
+	 * private boolean pruefeAuswahlErlaubtHeld(Quelle quelle, List<Wuerfel> ziel) {
+	 * Held held = quelle.alsHeld(); switch (held.getHeldtyp()) { case
+	 * KREUZRITTERPALADININ: // Kreuzritterin Ultimative Faehigkeit if
+	 * (!held.isLevelUp()) { if (!held.isUltimativeEingesetzt()) { return
+	 * pruefeZielQuelle(WeisseWuerfelseite.PRIESTER, ziel) ||
+	 * pruefeZielQuelle(WeisseWuerfelseite.KRIEGER, ziel); } } else { return false;
+	 * } case SOELDNERKOMMANDANT: if (ziel.size() > 2) { return false; } else { //
+	 * Ultimative Faehigkeit des Soeldner if (!held.isLevelUp()) { if
+	 * (!held.isUltimativeEingesetzt()) { if
+	 * (masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().
+	 * getDungeon() .contains(ziel.get(0)) &&
+	 * masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().
+	 * getDungeon() .contains(ziel.get(1))) { return true; } else { return false; }
+	 * } else { return false; } } else { // Kommandant Spezialfaehigkeit return
+	 * false; } } case HALBKOBOLDHAEUPTLING: break;
+	 * 
+	 * case ARKANTERSCHWERTMEISTERKAMPFMAGIER: break;
+	 * 
+	 * case ADEPTINHEXE: break;
+	 * 
+	 * case OKKULTISTINTOTENBESCHWOERERIN: break; default: break; } return false; }
+	 */
+
+	/*
+	 * /**
+	 * 
+	 * @author Merle
+	 * 
+	 * @description prueft, ob Quelle die Monster besiegen darf
+	 * 
+	 * @param quelle Gefaehrte
+	 * 
+	 * @param wuerfel Monsterwuerfel, die besiegt werden sollen
+	 */
+	/*
+	 * private boolean pruefeZielQuelle(WeisseWuerfelseite quelle, List<Wuerfel>
+	 * wuerfel) { // jeder Gefaehrte besiegt 1 Monster jeglicher Art // Dieb darf
+	 * nur einen besiegen if (wuerfel.size() == 1) { return true; } else if (quelle
+	 * == WeisseWuerfelseite.KRIEGER) { for (Wuerfel aktuellerWuerfel : wuerfel) {
+	 * if (aktuellerWuerfel.getSchwarzeWuerfelseite() !=
+	 * SchwarzeWuerfelseite.KOBOLD) { return false; } } return true; } else if
+	 * (quelle == WeisseWuerfelseite.PRIESTER) { for (Wuerfel aktuellerWuerfel :
+	 * wuerfel) { if (aktuellerWuerfel.getSchwarzeWuerfelseite() !=
+	 * SchwarzeWuerfelseite.SKELETT) { return false; } } return true; } else if
+	 * (quelle == WeisseWuerfelseite.ZAUBERER) { for (Wuerfel aktuellerWuerfel :
+	 * wuerfel) { if (aktuellerWuerfel.getSchwarzeWuerfelseite() !=
+	 * SchwarzeWuerfelseite.SCHLEIMWESEN) { return false; } } return true; } else if
+	 * (quelle == WeisseWuerfelseite.CHAMPION) { // Alle Wuerfel muessen dem
+	 * gleichen Typ angehoeren SchwarzeWuerfelseite ersterWuerfeltyp =
+	 * wuerfel.get(0).getSchwarzeWuerfelseite(); for (Wuerfel aktuellerWuerfel :
+	 * wuerfel) { // Abweichenden Wuerfel gefunden if
+	 * (aktuellerWuerfel.getSchwarzeWuerfelseite() != ersterWuerfeltyp) { return
+	 * false; } } return true; } else { return false; } }
+	 */
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+
+		List<Wuerfel> zielWuerfel = new ArrayList<Wuerfel>();
+
+		for (Ziel aktuellesZiel : ziel) {
+			zielWuerfel.add(aktuellesZiel.alsWuerfel());
+		}
+
+		// Zustaende aktualisieren passiert in den einzelnen Faellen
+
+		Wuerfel erstesZiel = ziel.get(0).alsWuerfel();
+
+		if (masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getFriedhof().contains(erstesZiel)) {
+			// Wenn der Wuerfel auf dem Friehof liegt, dann muss die Trankregel true
+			// geliefert haben
+			new TrankRegel().regelAusfuehren(quelle, ziel);
+			// In der Trankregel werden die Zustaende aktualisiert und der Quellschatz
+			// beseitigt
+		} else if (erstesZiel.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRUHE)) {
+			//Erstelle Dieb zum öffnen
+			Wuerfel wuerfel = new Wuerfel(true);
+			wuerfel.setWeisseWuerfelseite(WeisseWuerfelseite.DIEB);
+			// TRUHE oeffnen
+			new KistenOeffnerRegel().regelAusfuehren(wuerfel, ziel);
+			// Zustaende aktualisieren
+			/*
+				Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand()
+						.neuenSpielzustandErzeugen();
+				masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+				
+				masterController.getDungeonRoll().getAktuellerZustand().getSpieler()
+					.get(masterController.getDungeonRoll().getAktuellerZustand().getSpielerIndex());
+				
+				for (Wuerfel aktuellerWuerfel : zielWuerfel) {
+					masterController.getSchatzController().schatzZiehen();
+				}
+				// Quell-Schatz zuruecklegen
+				masterController.getSchatzController().schatzZuruecklegen(quelle.alsSchatz());
+			*/
+		} else {// Monster beliebiger Art besiegen
+			// Zustaende aktualisieren
+			Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand()
+					.neuenSpielzustandErzeugen();
+			masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+
+			for (Wuerfel aktuellerWuerfel : zielWuerfel) {
+				masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon()
+						.remove(aktuellerWuerfel);
+			}
+			// Quell-Schatz zuruecklegen
+			masterController.getSchatzController().schatzZuruecklegen(quelle.alsSchatz());
+			masterController.getAbenteuerController().phaseWechseln();
+		}
+
+	}
+
+}

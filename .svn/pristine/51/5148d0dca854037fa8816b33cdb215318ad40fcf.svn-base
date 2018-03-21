@@ -1,0 +1,198 @@
+package model;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Die Klasse Spielzustand speichert einen konkreten Zustand eines Spiels. �ber
+ * sie hat man Zugriff auf alle das konkrete Spiel betreffende Werte. Diese
+ * Klasse dient auch als Element in der doppelt verketteten Liste der
+ * Speicherstruktur f�r Z�ge.
+ * 
+ * @author Rahel
+ *
+ */
+public class Spielzustand implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6095410322433329501L;
+
+	/**
+	 * Die Spielrunde in der sich das Spiel im hier gespeicherten Zustand befindet.
+	 */
+	private int runde;
+
+	/**
+	 * Die Anzahl an Runden die gespielt werden soll. Dieser Wert wird nach dem
+	 * initialen Setzen nicht mehr ver�ndert.
+	 */
+	private int maxRunde;
+
+	/**
+	 * Der Index des Spielers in der Spielerliste, der im hier gespeicherten Zustand
+	 * des Spiels aktuell dran ist.
+	 */
+	private int spielerIndex;
+
+	/**
+	 * Dieser Wert ist initial <code>true</code>. Sobald eine Undo-Aktion
+	 * durchgef�hrt wird, wird dieser Wert auf <code>false</code> gesetzt. Dieser
+	 * ver�nderte Wert wird bei weiteren UNdo- oder Redo-Aktionen zu den vorherigen
+	 * und nachfolgenden gespeicherten Spielzust�nden weiterpropagiert.
+	 */
+	private boolean highscoreRelevant;
+
+	/**
+	 * Verweist auf den Spielzustand, der den Zustand des Spiels speichert bevor die
+	 * �nderungen des hier gespeicherten Zuges durchgef�hrt wurden, sofern hier
+	 * nicht der erste Zustand des Spiels gespeichert wird. Ansonsten verweist
+	 * dieses Attribut auf <code>null</code>.
+	 */
+	private Spielzustand vorherigerSpielzustand;
+
+	/**
+	 * Verweist auf den Spielzustand, der die �nderungen eines nach dem in dieser
+	 * Spielzustand-Instanz gespeicherten Zuges durchgef�hrten Zuges enth�lt, sofern
+	 * ein Zug nach dem hier gespeicherten durchgef�hrt wurde. Ansonsten verweist
+	 * dieses Attribut auf <code>null</code>.
+	 */
+	private Spielzustand nachfolgenderSpielzustand;
+
+	/**
+	 * Das im hier gespeicherten Zustand des Spiels aktuelle Abenteuer.
+	 */
+	private Abenteuer abenteuer;
+
+	/**
+	 * Die Liste der Spieler des Spiels.
+	 */
+	private List<Spieler> spieler;
+
+	/**
+	 * Die Liste der Sch�tze, die sich in der Schatztruhe befinden, also noch von
+	 * Spielern gezogen werden k�nnen. Im initialen ZUstand des Spiel enth�lt diese
+	 * Liste alle Sch�tze des Spiels. Wird ein Schatz eingestzt, so kehrt er in den
+	 * Vorrat zur�ck, wird also dieser Liste wieder hinzugef�gt.
+	 */
+	private List<Schatz> schaetze;
+
+	/**
+	 * In dieser Methode wird das Spielzustandobjekt geklont und der Klon als
+	 * nachfolgender Spielzustand in die Speicherstruktur eingeordnet.
+	 * 
+	 * @return Der Klon des Spielzustands
+	 */
+	public Spielzustand neuenSpielzustandErzeugen() {
+		Spielzustand klon = klonen();
+		this.setNachfolgenderSpielzustand(klon);
+		return klon;
+	}
+
+	public Spielzustand klonen() {
+		Spielzustand klon = new Spielzustand();
+		if (abenteuer != null) {
+			klon.setAbenteuer(this.abenteuer.klonen());
+		}
+		klon.setHighscoreRelevant(this.highscoreRelevant);
+		klon.setMaxRunde(this.maxRunde);
+		klon.setVorherigerSpielzustand(this);
+		klon.setRunde(this.runde);
+		List<Schatz> neueSchatzListe = new ArrayList<Schatz>();
+		neueSchatzListe.addAll(schaetze);
+		klon.setSchaetze(neueSchatzListe);
+		List<Spieler> neueSpielerListe = new ArrayList<>();
+		for (Spieler aktSpieler : spieler) {
+			neueSpielerListe.add(aktSpieler.klonen());
+		}
+		klon.setSpieler(neueSpielerListe);
+		klon.setSpielerIndex(this.spielerIndex);
+		return klon;
+	}
+
+	/**
+	 * Diese Methode gibt den Spieler zur�ck, der in dem hier gespeicherten Zustand
+	 * des Spiels aktuell an der Reihe ist. Also das Spieler-Objekt am Index
+	 * spielerIndex der Liste spieler.
+	 * 
+	 * @return Das Spieler-Objekt am aktuellen spielerIndex der Spieler-Liste
+	 */
+	public Spieler aktuellerSpieler() {
+		return spieler.get(spielerIndex);
+	}
+
+	public int getRunde() {
+		return runde;
+	}
+
+	public void setRunde(int runde) {
+		this.runde = runde;
+	}
+
+	public int getMaxRunde() {
+		return maxRunde;
+	}
+
+	public void setMaxRunde(int maxRunde) {
+		this.maxRunde = maxRunde;
+	}
+
+	public int getSpielerIndex() {
+		return spielerIndex;
+	}
+
+	public void setSpielerIndex(int spielerIndex) {
+		this.spielerIndex = spielerIndex;
+	}
+
+	public boolean isHighscoreRelevant() {
+		return highscoreRelevant;
+	}
+
+	public void setHighscoreRelevant(boolean highscoreRelevant) {
+		this.highscoreRelevant = highscoreRelevant;
+	}
+
+	public Spielzustand getVorherigerSpielzustand() {
+		return vorherigerSpielzustand;
+	}
+
+	public void setVorherigerSpielzustand(Spielzustand vorherigerSpielzustand) {
+		this.vorherigerSpielzustand = vorherigerSpielzustand;
+	}
+
+	public Spielzustand getNachfolgenderSpielzustand() {
+		return nachfolgenderSpielzustand;
+	}
+
+	public void setNachfolgenderSpielzustand(Spielzustand nachfolgenderSpielzustand) {
+		this.nachfolgenderSpielzustand = nachfolgenderSpielzustand;
+	}
+
+	public Abenteuer getAbenteuer() {
+		return abenteuer;
+	}
+
+	public void setAbenteuer(Abenteuer abenteuer) {
+		this.abenteuer = abenteuer;
+	}
+
+	public List<Spieler> getSpieler() {
+		return spieler;
+	}
+
+	public void setSpieler(List<Spieler> spieler) {
+		this.spieler = spieler;
+	}
+
+	public List<Schatz> getSchaetze() {
+		return schaetze;
+	}
+
+	public void setSchaetze(List<Schatz> schaetze) {
+		this.schaetze = schaetze;
+	}
+
+}

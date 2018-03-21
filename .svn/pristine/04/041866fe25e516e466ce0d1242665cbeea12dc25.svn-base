@@ -1,0 +1,453 @@
+package control.regeln;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Abenteuer;
+import model.Held;
+import model.Heldtyp;
+import model.Phase;
+import model.Quelle;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+/**
+ * Regel fuer die MonsterPhase,
+ * 
+ * @author sopr102
+ *
+ */
+
+public class MonsterPhasenRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		super.setMasterController(masterController);
+	}
+
+	/**
+	 * implementiert die Regeln abgeleitet vom RegelController fuer Monster Phase
+	 * 
+	 * @param quelle
+	 *            Ursache fuer die Aktion
+	 * @param Ursache
+	 *            fuer die Aktion * <br/>
+	 * @return Bei Monster Phase die Ziele als DRACHENKOPF oder TRANK wird direkt
+	 *         false zurueckgeben. Sonsts nach dem Regeln anzupassen.
+	 */
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+
+		List<Wuerfel> myZiels = new ArrayList<Wuerfel>();
+		Held held = this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld();
+
+		// fuer alle Held als die Quelle
+		if (quelle.alsHeld() != null) {
+			switch (quelle.alsHeld().getHeldtyp()) {
+			case HALBKOBOLDHAEUPTLING:
+				HalbkoboldHaeuptlingRegel hhr = new HalbkoboldHaeuptlingRegel();
+				hhr.setMasterController(masterController);
+				return hhr.pruefeAuswahlErlaubt(quelle, ziel);
+			case KREUZRITTERPALADININ:
+				PaladininRegel pr = new PaladininRegel();
+				pr.setMasterController(masterController);
+				return pr.pruefeAuswahlErlaubt(quelle, ziel);
+			case RITTERDRACHENTOETER:
+				RitterDrachentoeterRegel rtr = new RitterDrachentoeterRegel();
+				rtr.setMasterController(masterController);
+				return rtr.pruefeAuswahlErlaubt(quelle, ziel);
+			case SOELDNERKOMMANDANT:
+				SoeldnerRegel sr = new SoeldnerRegel();
+				sr.setMasterController(masterController);
+				return sr.pruefeAuswahlErlaubt(quelle, ziel);
+			case MINNESAENGERBARDE:
+				MineesaengerBardeRegel mbr = new MineesaengerBardeRegel();
+				mbr.setMasterController(masterController);
+				return mbr.pruefeAuswahlErlaubt(quelle, ziel);
+			case OKKULTISTINTOTENBESCHWOERERIN:
+				OkkultistinRegel or = new OkkultistinRegel();
+				or.setMasterController(masterController);
+				return or.pruefeAuswahlErlaubt(quelle, ziel);
+			case ARKANTERSCHWERTMEISTERKAMPFMAGIER:
+				KampfmagierRegel kr = new KampfmagierRegel();
+				kr.setMasterController(masterController);
+				return kr.pruefeAuswahlErlaubt(quelle, ziel);
+			case ADEPTINHEXE:
+				AdeptinRegel ar = new AdeptinRegel();
+				ar.setMasterController(masterController);
+				return ar.pruefeAuswahlErlaubt(quelle, ziel);
+			default:
+				break;
+
+			}
+		}
+		// erst muss pruefen dass alle Ziele sind Wuefel
+		for (Ziel z : ziel) {
+			if (z.alsWuerfel() == null) {
+				System.out.println("passed a ziel keines Wuerfel in MonsterPhasenRgeel!");
+				return false;
+			}
+			myZiels.add(z.alsWuerfel());
+		}
+		// Bei Spruchrolle muss fuer ADEPTINHEXE kuermmern,gib das vor, bei ADEPTINHEXE
+		// die Spruchrolle kann nur als Gefaehrte benutzt
+		if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.SPRUCHROLLE)) {
+			if (held.getHeldtyp().equals(Heldtyp.ADEPTINHEXE)) {
+				return this.adptinRegel(quelle, myZiels);
+			}
+			return true;
+		}
+
+		// kriegen all Type vom dem Schwatzwuerfel, wenn die Quelle keine Spruchrolle
+		// ist
+		int ko = 0, sc = 0, sk = 0;
+		for (Wuerfel w : myZiels) {
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.DRACHENKOPF)) {
+				// if (held.getHeldtyp().equals(Heldtyp.MINNESAENGERBARDE)) {
+				// return new MineesaengerBardeRegel().pruefeAuswahlErlaubt(quelle, ziel);
+				// }
+				// if (held.getHeldtyp().equals(Heldtyp.SOELDNERKOMMANDANT)) {
+				// return new SoeldnerRegel().pruefeAuswahlErlaubt(quelle, ziel);
+				// }
+				return false;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRANK)) {
+				if (held.getHeldtyp().equals(Heldtyp.HALBKOBOLDHAEUPTLING)) {
+					HalbkoboldHaeuptlingRegel hhr = new HalbkoboldHaeuptlingRegel();
+					hhr.setMasterController(masterController);
+					return hhr.pruefeAuswahlErlaubt(quelle, ziel);
+				}
+				return false;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRUHE)) {
+				if (held.getHeldtyp().equals(Heldtyp.HALBKOBOLDHAEUPTLING)) {
+					HalbkoboldHaeuptlingRegel hhr = new HalbkoboldHaeuptlingRegel();
+					hhr.setMasterController(masterController);
+					return hhr.pruefeAuswahlErlaubt(quelle, ziel);
+				}
+				return false;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.KOBOLD)) {
+				ko += 1;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.SCHLEIMWESEN)) {
+				sc += 1;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.SKELETT)) {
+				sk = 1;
+			}
+		}
+
+		// fuer MINESAENGERBARDE und SOELDNERKOMMANDANT muss sein faehigkeit
+		// beruecksichtigen
+		// weil sie 2 Type vom Monster besiegen kann.
+		if (ko > 0 && sc > 0 || sk > 0 && sc > 0 || ko > 0 && sk > 0) {
+			if (held.getHeldtyp().equals(Heldtyp.MINNESAENGERBARDE)) {
+				MineesaengerBardeRegel mbr = new MineesaengerBardeRegel();
+				mbr.setMasterController(masterController);
+				return mbr.pruefeAuswahlErlaubt(quelle, ziel);
+			}
+			if (held.getHeldtyp().equals(Heldtyp.SOELDNERKOMMANDANT)) {
+				SoeldnerRegel sr = new SoeldnerRegel();
+				sr.setMasterController(masterController);
+				return sr.pruefeAuswahlErlaubt(quelle, ziel);
+			}
+			return false;
+		}
+
+		// fuer die Default Faehigkeit
+		if (this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getPhase()
+				.equals(Phase.KAMPFPHASE)) {
+
+			if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.CHAMPION)) {
+				return true;
+			}
+
+			if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.KRIEGER)) {
+				if (myZiels.size() == 1) {
+					return true;
+				} else if (myZiels.size() == ko) {
+					return true;
+				} else if (held.getHeldtyp().equals(Heldtyp.KREUZRITTERPALADININ) && myZiels.size() == sk) {
+					return true;
+				} else if (held.getHeldtyp().equals(Heldtyp.ARKANTERSCHWERTMEISTERKAMPFMAGIER)
+						&& myZiels.size() == sc) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+			if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.PRIESTER)) {
+				if (myZiels.size() == 1) {
+					return true;
+				} else if (myZiels.size() == sk) {
+					return true;
+				} else if (held.getHeldtyp().equals(Heldtyp.KREUZRITTERPALADININ) && myZiels.size() == ko) {
+					return true;
+				} else if (held.getHeldtyp().equals(Heldtyp.OKKULTISTINTOTENBESCHWOERERIN) && myZiels.size() == sc) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+			if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.ZAUBERER)) {
+				if (myZiels.size() == 1) {
+					return true;
+				} else if (myZiels.size() == sc) {
+					return true;
+				} else if (held.getHeldtyp().equals(Heldtyp.MINNESAENGERBARDE) && myZiels.size() == 1) {
+					return true;
+				} else if (held.getHeldtyp().equals(Heldtyp.OKKULTISTINTOTENBESCHWOERERIN) && myZiels.size() == sk) {
+					return true;
+				} else if (held.getHeldtyp().equals(Heldtyp.ARKANTERSCHWERTMEISTERKAMPFMAGIER)
+						&& myZiels.size() == ko) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+			if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.DIEB)) {
+				if (myZiels.size() == 1) {
+					return true;
+				} else if (held.getHeldtyp().equals(Heldtyp.MINNESAENGERBARDE) && myZiels.size() == sc) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * implementiert die Regeln Ausfuerhren abgeleitet vom RegelController fuer
+	 * Monster Phase
+	 * 
+	 * @param quelle
+	 *            Ursache fuer die Aktion
+	 * @param Ursache
+	 *            fuer die Aktion * <br/>
+	 * @description Bei Anfang wird die quelle aus dem Gefaehrten entfernt, und
+	 *              ziele aus dem Dungeon. Bei Spruchrolle muss die neu gewuerfelte
+	 *              Wurfeln wieder in Spiel hinzufuegen.
+	 */
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		// Spielzustaend kopieren und aktualisieren
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand()
+				.neuenSpielzustandErzeugen();
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+
+		Abenteuer a = this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer();
+		Held held = this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld();
+		if (quelle.alsHeld() != null) {
+			switch (quelle.alsHeld().getHeldtyp()) {
+			case HALBKOBOLDHAEUPTLING:
+				new HalbkoboldHaeuptlingRegel().regelAusfuehren(quelle, ziel);
+				return;
+			case KREUZRITTERPALADININ:
+				new PaladininRegel().regelAusfuehren(quelle, ziel);
+				return;
+			case RITTERDRACHENTOETER:
+				new RitterDrachentoeterRegel().regelAusfuehren(quelle, ziel);
+				return;
+			case SOELDNERKOMMANDANT:
+				new SoeldnerRegel().regelAusfuehren(quelle, ziel);
+				return;
+			case MINNESAENGERBARDE:
+				new MineesaengerBardeRegel().regelAusfuehren(quelle, ziel);
+				return;
+			case OKKULTISTINTOTENBESCHWOERERIN:
+				new OkkultistinRegel().regelAusfuehren(quelle, ziel);
+				return;
+			case ARKANTERSCHWERTMEISTERKAMPFMAGIER:
+				new KampfmagierRegel().regelAusfuehren(quelle, ziel);
+				return;
+			case ADEPTINHEXE:
+				new AdeptinRegel().regelAusfuehren(quelle, ziel);
+				return;
+			default:
+				break;
+
+			}
+		}
+		List<Wuerfel> myZiels = new ArrayList<Wuerfel>();
+		for (Ziel z : ziel) {
+			if (z.alsWuerfel() == null) {
+				System.out.println("passed a ziel keines Wuerfel in MonsterPhasenRgeel!");
+			}
+			myZiels.add(z.alsWuerfel());
+		}
+
+		int ko = 0, sc = 0, sk = 0;
+		for (Wuerfel w : myZiels) {
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.DRACHENKOPF)) {
+				if (held.getHeldtyp().equals(Heldtyp.MINNESAENGERBARDE)) {
+					new MineesaengerBardeRegel().regelAusfuehren(quelle, ziel);
+					return;
+
+				}
+				if (held.getHeldtyp().equals(Heldtyp.SOELDNERKOMMANDANT)) {
+					new SoeldnerRegel().regelAusfuehren(quelle, ziel);
+					return;
+
+				}
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRANK)) {
+				if (held.getHeldtyp().equals(Heldtyp.HALBKOBOLDHAEUPTLING)) {
+					new HalbkoboldHaeuptlingRegel().regelAusfuehren(quelle, ziel);
+					return;
+
+				}
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRUHE)) {
+				if (held.getHeldtyp().equals(Heldtyp.HALBKOBOLDHAEUPTLING)) {
+					new HalbkoboldHaeuptlingRegel().regelAusfuehren(quelle, ziel);
+					return;
+
+				}
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.KOBOLD)) {
+				ko += 1;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.SCHLEIMWESEN)) {
+				sc += 1;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.SKELETT)) {
+				sk = 1;
+			}
+		}
+
+		// fuer MINESAENGERBARDE und SOELDNERKOMMANDANT muss sein faehigkeit
+		// beruecksichtigen
+		// weil sie 2 Type vom Monster besiegen kann.
+		if (ko > 0 && sc > 0 || sk > 0 && sc > 0 || ko > 0 && sk > 0) {
+			if (held.getHeldtyp().equals(Heldtyp.MINNESAENGERBARDE)) {
+				new MineesaengerBardeRegel().regelAusfuehren(quelle, ziel);
+				return;
+
+			}
+			if (held.getHeldtyp().equals(Heldtyp.SOELDNERKOMMANDANT)) {
+				new SoeldnerRegel().regelAusfuehren(quelle, ziel);
+				return;
+
+			}
+		}
+
+		// legen die Quelle in Friedhof
+		if (!a.getGefaehrten().remove(quelle.alsWuerfel())) {
+			System.out.println("regel aus fuhren Error when remove the Wurfel aus dem Gruppen");
+		}
+		a.getFriedhof().add(quelle.alsWuerfel());
+
+		// Falls die SPruchrolle ist die Quelle
+		if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.SPRUCHROLLE)) {
+
+			if (held.getHeldtyp().equals(Heldtyp.ADEPTINHEXE)) {
+				adptinRegelAusfuehren(quelle, myZiels);
+				return;
+			}
+
+			for (Ziel z : ziel) {
+				if (z.alsWuerfel().getWeisseWuerfelseite() != null) {
+					if (!a.getGefaehrten().remove(z.alsWuerfel())) {
+						System.out.println("regel aus fuhren Error when remove the Wurfel aus Friedhof");
+					}
+				}
+				if (z.alsWuerfel().getSchwarzeWuerfelseite() != null) {
+					if (!a.getDungeon().remove(z.alsWuerfel())) {
+						System.out.println("regel aus fuhren Error when remove the Wurfel aus Friedhof");
+					}
+				}
+			}
+
+			this.masterController.getWuerfelController().wuerfeln(myZiels);
+
+			for (Wuerfel myz : myZiels) {
+				if (myz.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.DRACHENKOPF)) {
+					a.getDrachen().add(myz);
+				} else if (myz.getSchwarzeWuerfelseite() != null) {
+					a.getDungeon().add(myz);
+				} else {
+					a.getGefaehrten().add(myz);
+				}
+			}
+
+		} else {
+			// wenn es keine Spruchrolle ist, muss die Ziele nur Monster sein, einfacgh aus
+			// dem Dungeon entfernen
+			for (Ziel z : ziel) {
+				if (!a.getDungeon().remove(z.alsWuerfel())) {
+					System.out.println("regel aus fuhren Error when remove the Wurfel aus Dungeon");
+				}
+			}
+		}
+		this.masterController.getDungeonRoll().getAktuellerZustand().setAbenteuer(a);
+	}
+
+	/**
+	 * Fuer die adptinRegel, die SpruchRolle kann fuer MonsterPhase als beliebig
+	 * Gruppenwuerfel benutzt TODO koennte in AdaptinRegel weiter implementiert
+	 * werden
+	 * 
+	 * @param quelle
+	 * @param ziel
+	 * @return
+	 */
+	public boolean adptinRegel(Quelle quelle, List<Wuerfel> ziel) {
+		if (!this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getPhase()
+				.equals(Phase.KAMPFPHASE)
+				&& this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().isLevelUp()
+				&& this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+						.getHeldtyp().equals(Heldtyp.ADEPTINHEXE)) {
+			return false;
+		}
+		int ko = 0, sc = 0, sk = 0;
+		for (Wuerfel w : ziel) {
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.DRACHENKOPF)) {
+				return false;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRANK)) {
+				return false;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRUHE)) {
+				return false;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.KOBOLD)) {
+				ko += 1;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.SCHLEIMWESEN)) {
+				sc += 1;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.SKELETT)) {
+				sk = 1;
+			}
+		}
+		if (ziel.size() == ko || ziel.size() == sc || ziel.size() == sk) {
+			return true;
+		}
+		return false;
+
+	}
+
+	public void adptinRegelAusfuehren(Quelle quelle, List<Wuerfel> ziel) {
+		// Spielzustaend kopieren und aktualisieren
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand()
+				.neuenSpielzustandErzeugen();
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+
+		this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten()
+				.remove(quelle.alsWuerfel());
+		this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getFriedhof()
+				.add(quelle.alsWuerfel());
+		for (Wuerfel w : ziel) {
+			this.masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon().remove(w);
+
+		}
+	}
+}

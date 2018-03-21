@@ -1,0 +1,128 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Held;
+import model.Heldtyp;
+import model.Quelle;
+import model.Schatz;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+public class MinnesaengerBardeRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		// TODO Auto-generated method stub
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		if (quelle.alsHeld() == null) {
+			//Ein Krieger kann noch zusaatzlich Monster besiegen
+			if(quelle.alsWuerfel().getWeisseWuerfelseite()==WeisseWuerfelseite.CHAMPION&&
+					masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().isLevelUp()&&
+					masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().getHeldtyp().equals(Heldtyp.MINNESAENGERBARDE)) 
+			{
+				int meistens=ziel.size()-1;
+				int ko = 0, sc = 0, sk = 0;
+				for(Ziel z :ziel) {
+					if(z.alsWuerfel().getSchwarzeWuerfelseite()==SchwarzeWuerfelseite.KOBOLD) {
+						ko++;
+						continue;
+						}
+					if(z.alsWuerfel().getSchwarzeWuerfelseite()==SchwarzeWuerfelseite.SCHLEIMWESEN) {
+						sc++;
+						continue;
+						}
+					if(z.alsWuerfel().getSchwarzeWuerfelseite()==SchwarzeWuerfelseite.SKELETT) {
+						sk++;
+						continue;
+						}
+				}
+				
+				if(ko==meistens||sc==meistens||sk==meistens) {
+					return true;
+				}else {
+					return false;
+				}
+			}
+			return false;
+		}
+		Held held = quelle.alsHeld();
+		if (held.getHeldtyp() != Heldtyp.MINNESAENGERBARDE) {
+			return false;
+		}
+		if (held.isUltimativeEingesetzt()) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		// Spielzustand klonen und aktualisieren
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand()
+				.neuenSpielzustandErzeugen();
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+		
+		if (quelle.alsHeld() == null) {
+			masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer()
+			.getGefaehrten().remove(quelle.alsWuerfel());
+			masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getFriedhof().add(quelle.alsWuerfel());			
+			for(Ziel z : ziel) {
+				masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer()
+				.getDungeon().remove(z.alsWuerfel());
+			}
+			masterController.getAbenteuerController().phaseWechseln();
+			return;
+
+		}
+
+		// Wuerfel in die Drachenhoehle verschieben
+		List<Wuerfel> monsterWuerfel = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer()
+				.getDungeon();
+		List<Wuerfel> drachenWuerfel = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer()
+				.getDrachen();
+
+		for (Wuerfel wuerfel : monsterWuerfel) {
+			monsterWuerfel.remove(wuerfel);
+			masterController.getWuerfelController().wuerfelseiteErsetzen(wuerfel, SchwarzeWuerfelseite.DRACHENKOPF);
+			drachenWuerfel.add(wuerfel);
+		}
+
+		// UF als genutzt setzen
+		quelle.alsHeld().setUltimativeEingesetzt(true);
+
+		// Phasenwechsel
+		if (quelle.alsHeld().isLevelUp()) {
+			Schatz neuerSchatz = masterController.getSchatzController().schatzZiehen();
+			if (neuerSchatz == null) {// Keine Schaetze mehr vorhanden
+				int erfahrungspunkte = masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler()
+						.getSpielerWerte().getErfahrungspunkte();
+				masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getSpielerWerte()
+						.setErfahrungspunkte(erfahrungspunkte + 2);
+			} else {
+				List<Schatz> schaetze = masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler()
+						.getSpielerWerte().getSchaetze();
+				schaetze.add(neuerSchatz);
+				int erfahrungspunkte = masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler()
+						.getSpielerWerte().getErfahrungspunkte();
+				masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getSpielerWerte()
+						.setErfahrungspunkte(erfahrungspunkte + 1);
+
+			}
+			masterController.getAbenteuerController().naechstesLevel();
+		} else {
+			masterController.getAbenteuerController().phaseWechseln();
+		}
+	}
+
+}

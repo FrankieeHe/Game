@@ -1,0 +1,186 @@
+package control;
+
+import model.DungeonRoll;
+import model.Schatz;
+import model.Spieler;
+import model.Spielertyp;
+import model.Spielzustand;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MasterController {
+
+	private DungeonRoll dungeonRoll;
+
+	private WuerfelController wuerfelController;
+
+	private SchatzController schatzController;
+
+	private KIController kIController;
+
+	private HighscoreController highscoreController;
+
+	private RegelController regelController;
+
+	private AbenteuerController abenteuerController;
+
+	private AuswahlController auswahlController;
+
+	private SpeicherController speicherController;
+
+	public MasterController() {
+		super();
+		this.dungeonRoll = new DungeonRoll();
+		this.wuerfelController = new WuerfelController();
+		this.schatzController = new SchatzController();
+		this.kIController = new KIController();
+		this.highscoreController = new HighscoreController();
+		this.abenteuerController = new AbenteuerController(this);
+		this.auswahlController = new AuswahlController();
+		this.speicherController = new SpeicherController();
+	}
+
+	/**
+	 * Macht die letzten von einem menschlichen Spieler durchgefuehrten Zuege
+	 * rueckgaengig. Das Flag {@code highscoreRelevant} wird auf <b>false</b>
+	 * gesetzt, wodurch das aktuelle Spiel nicht mehr in die Highscore-Liste
+	 * aufgenommen werden kann.
+	 */
+
+	public void undo() {
+		Spielzustand as = dungeonRoll.getAktuellerZustand();
+		Spielzustand ns;
+		Spielertyp st = null;
+		do {
+			ns = as.getVorherigerSpielzustand();
+			if (ns != null) {
+				Spieler sp = ns.aktuellerSpieler();
+				st = sp.getSpielertyp();
+			}
+		} while (ns != null && st != Spielertyp.MENSCHLICH);
+		if (ns != null) {
+			spielzustandSetzen(ns);
+			ns.setHighscoreRelevant(false);
+		}
+	}
+
+	/**
+	 * Stellt die zuletzt rueckgängig gemachten Spielzuege wieder her.
+	 */
+	public void redo() {
+		Spielzustand as = dungeonRoll.getAktuellerZustand();
+		Spielzustand ns;
+		Spielertyp st = null;
+		do {
+			ns = as.getNachfolgenderSpielzustand();
+			if (ns != null) {
+				Spieler sp = ns.aktuellerSpieler();
+				st = sp.getSpielertyp();
+			}
+		} while (ns != null && st != Spielertyp.MENSCHLICH);
+		if (ns != null) {
+			spielzustandSetzen(ns);
+			ns.setHighscoreRelevant(false);
+		}
+	}
+
+	/**
+	 * Setzt den uebergebenen Spielzustand als den aktuellen.
+	 * 
+	 * @param zustand
+	 *            zu setzender Spielzustand
+	 * 
+	 */
+	public void spielzustandSetzen(Spielzustand zustand) {
+		dungeonRoll.setAktuellerZustand(zustand);
+	}
+
+	/**
+	 * Beendet das aktuelle Spiel
+	 */
+	public void spielBeenden() {
+		if (dungeonRoll.getAktuellerZustand().isHighscoreRelevant()) {
+			highscoreController.highscoreEintragen(dungeonRoll.getAktuellerZustand());
+		}
+	}
+
+	/**
+	 * Beendet das komplette Programm
+	 */
+	public void programmBeenden() {
+		System.exit(0);
+
+	}
+
+	/**
+	 * Startet ein neues Spiel
+	 * 
+	 * @param spieler
+	 *            Liste mit Spielern, die an neuem Spiel teilnehmen
+	 * @param rundenanzahl
+	 *            Rundenzahl des neuen Spiels
+	 */
+	public void spielStarten(List<Spieler> spieler, int rundenanzahl) {
+		Spielzustand sz = new Spielzustand();
+		sz.setSpieler(spieler);
+		sz.setMaxRunde(rundenanzahl);
+		sz.setHighscoreRelevant(true);
+		ArrayList<Schatz> schaetze = new ArrayList<Schatz>();
+		for (int i = 0; i < 3; i++) {
+			schaetze.add(Schatz.KOEPFERKLINGE);
+			schaetze.add(Schatz.TALISMAN);
+			schaetze.add(Schatz.ZEPTERDERMACHT);
+			schaetze.add(Schatz.DIEBESWERKZEUG);
+			schaetze.add(Schatz.SPRUCHROLLE);
+			schaetze.add(Schatz.TRANK);
+		}
+		for (int i = 0; i < 4; i++) {
+			schaetze.add(Schatz.UNSICHTBARKEITSRING);
+			schaetze.add(Schatz.DRACHENKOEDER);
+			schaetze.add(Schatz.STADTPORTAL);
+		}
+		for (int i = 0; i < 6; i++) {
+			schaetze.add(Schatz.DRACHENSCHUPPEN);
+		}
+		sz.setSchaetze(schaetze);
+		spielzustandSetzen(sz);
+
+	}
+
+	public DungeonRoll getDungeonRoll() {
+		return dungeonRoll;
+	}
+
+	public WuerfelController getWuerfelController() {
+		return wuerfelController;
+	}
+
+	public SchatzController getSchatzController() {
+		return schatzController;
+	}
+
+	public KIController getkIController() {
+		return kIController;
+	}
+
+	public HighscoreController getHighscoreController() {
+		return highscoreController;
+	}
+
+	public RegelController getRegelController() {
+		return regelController;
+	}
+
+	public AbenteuerController getAbenteuerController() {
+		return abenteuerController;
+	}
+
+	public AuswahlController getAuswahlController() {
+		return auswahlController;
+	}
+
+	public SpeicherController getSpeicherController() {
+		return speicherController;
+	}
+}

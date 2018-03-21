@@ -1,0 +1,66 @@
+package control;
+
+import model.Phase;
+
+/**
+ * Der Controller fuer das Abenteuer
+ * @author Dong
+ *
+ */
+public class AbenteuerController {
+	/**
+	 * MasterController des Projektes.
+	 * Mit Hilfe von MasterController bekommt AbenteuerController Zugriff zu DungeonRoll und anderen Controllers. 
+	 */
+	private MasterController masterController;
+	/**
+	 * Konstruktor, produkziert eine AbenteuerController. 
+	 * @param masterController
+	 * 			MasterController des Projektes.
+	 */
+	public AbenteuerController(MasterController masterController){
+		this.masterController=masterController;
+	} 
+	/**
+	 * Ein neues Abenteuer zu erstellen und anfang.
+	 */
+	public void neuesAbenteuerErstellen() {
+
+	}
+	/**
+	 * Akteueres Abenteuer zu beenden. 
+	 * Der bisher geschafft Erfahrungpunkt wird berechnet und die Ultimative Faehigkeit des Helds rueckgesetzt.
+	 * Der Spieler sitzt in Ruhe.
+	 * Der Spielzustand wird am Ende gespeichert.
+	 */
+	public void abenteuerBeenden() {
+
+	}
+
+	/**
+	 * welchseln der Spiel in naechsten Level.
+	 * Nur Dungeon Wuerfel wird in Anzahl von neuem Level gewuerfelt.
+	 * aktuellePhase wird auf WUERFELPHASE gesetzt
+	 */
+	public void naechstesLevel() {
+
+	}
+	
+	/**
+	 * welchseln die aktuellePhase des Spiels in gegeben Phase.
+	 * @param phase - die Phase, in die zu wechseln ist
+	 */
+	public void phaseWechseln(Phase phase){
+		
+	}
+	
+	/**
+	 * welchseln die aktuellePhase des Spiels in naechste Phase.
+	 * die Reinfolge von Phase ist allgemein im Zyklus
+	 * als WUEFELPHASE,KAMPFPHASE, PLUENDERPHASE, DRACHENPHASE, UMGRUPPIERUNGSPHASE
+	 */
+	public void phaseWechseln() {
+
+	}
+
+}

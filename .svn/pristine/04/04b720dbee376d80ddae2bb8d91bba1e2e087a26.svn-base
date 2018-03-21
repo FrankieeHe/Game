@@ -1,0 +1,127 @@
+package control;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import model.Abenteuer;
+import model.Quelle;
+import model.Schatz;
+import model.Spieler;
+import model.Ziel;
+
+
+
+
+public class AuswahlController {
+
+	private Collection<RegelController> regelController;
+
+	private MasterController masterController;
+	
+ /**
+ * @author Merle
+ * @param quelle loest Handlung aus
+ * @param ziel werden / wird durch die Handlung beeinflust
+ * @return false, wenn es keine Regel gibt, die diese Handlung erlaubt <br/> 
+ *  true, wenn eine Regel gefunden wurde, die diese Handlung erlaubt
+ * @preconditions @see moeglicheZiele wurde aufgerufen
+ * @postconditions @see regelAusfuehren wird aufgerufen
+ * <br/>
+ * Es wird versucht, eine Regel zu finden, welche die Kombination aus Quelle und 
+ * Ziel zu einer Handlung kombinieren kann. <br/>
+ * Wenn mehrere Regeln moeglich sind, wird die erst moegliche Aktion ausgefuehrt. 
+ */
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		return regelController.stream().anyMatch(r -> r.pruefeAuswahlErlaubt(quelle, ziel));
+	}
+	
+	/**
+	 * @author Merle
+	 * @return Liste moeglicher Ziele; null wenn keine vorhanden sind
+	 * @postconditions @see pruefeAuswahlErlaubt(Quelle quelle, List ziel) wird aufgerufen
+	 * @preconditions Nutzer waehlt Quelle aus
+	 * <br/>
+	 * Prueft alle Objekte, die ausliegen, ob eine Kombination moeglich waere
+	 */
+	public List<Ziel> moeglicheZiele(Quelle quelle) {
+		final Abenteuer abenteuer = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer();
+		final Set<Ziel> potentielleZiele = erstelleMengeDerPotenziellenZiele(quelle, abenteuer);
+		final Set<Set<Ziel>> potenzmengePotenzielleZiele = bauePotenzmenge(potentielleZiele);
+		
+		final Optional<Set<Ziel>> ersteMachbareZielmenge = potenzmengePotenzielleZiele.stream().filter(z -> 
+			pruefeAuswahlErlaubt(quelle, new ArrayList<>(z))
+		).findFirst();
+		
+		return ersteMachbareZielmenge.isPresent() ? new ArrayList<>(ersteMachbareZielmenge.get()) : new ArrayList<>();
+	}
+
+	/**
+	 * @author Merle
+	 * @param quelle Loest Aktion aus
+	 * @param ziel Werden von Handlung beeinflusst
+	 * @preconditions @see pruefeAuswahlErlaubt lieferte true
+	 * @postconditions ruft regelAusfuehren des jeweiligen Regelcontrollers auf
+	 */
+		public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+			final Optional<RegelController> controller = regelController.stream().filter(r -> r.pruefeAuswahlErlaubt(quelle, ziel)).findFirst();
+			
+			if (controller.isPresent()) {
+				controller.get().regelAusfuehren(quelle, ziel);
+			}
+		}
+
+	private Set<Ziel> erstelleMengeDerPotenziellenZiele(Quelle quelle, final Abenteuer abenteuer) {
+		final Set<Ziel> potentielleZiele = getAlleZiele(abenteuer);
+		
+		if (quelle.alsSchatz() != null) {
+			potentielleZiele.remove(quelle.alsSchatz());
+		} else if (quelle.alsWuerfel() != null) {
+			potentielleZiele.remove(quelle.alsWuerfel());
+		}
+		
+		return potentielleZiele;
+	}
+
+	private Set<Ziel> getAlleZiele(final Abenteuer abenteuer) {
+		final Set<Ziel> potentielleZiele = new HashSet<>();
+		potentielleZiele.addAll(abenteuer.getDungeon());
+		potentielleZiele.addAll(abenteuer.getFriedhof());
+		potentielleZiele.addAll(abenteuer.getGefaehrten());
+		potentielleZiele.addAll(abenteuer.getDrachen());
+		potentielleZiele.addAll(abenteuer.getSpielerWerte().getSchaetze());
+		potentielleZiele.addAll(getSchaetze());
+		return potentielleZiele;
+	}
+
+	static Set<Set<Ziel>> bauePotenzmenge(Set<Ziel> potentielleZiele) {
+		Set<Set<Ziel>> potenzmenge = new HashSet<>();
+		potenzmenge.add(new HashSet<>());
+		if (potentielleZiele.isEmpty()) {
+			return potenzmenge;
+		}
+		for (Ziel ziel : potentielleZiele) {
+			Set<Ziel> eineStufeWeniger = new HashSet<>(potentielleZiele);
+			eineStufeWeniger.remove(ziel);
+			Set<Set<Ziel>> potenzmengeEineStufeWeniger = bauePotenzmenge(eineStufeWeniger);
+			for (Set<Ziel> potenzmengenElement : potenzmengeEineStufeWeniger) {
+				Set<Ziel> mitAltemElement = new HashSet<>(potenzmengenElement);
+				mitAltemElement.add(ziel);
+				potenzmenge.add(potenzmengenElement);
+				potenzmenge.add(mitAltemElement);
+			}
+		}
+		return potenzmenge;
+	}
+
+	private List<Schatz> getSchaetze() {
+		final List<Spieler> alleSpieler = masterController.getDungeonRoll().getAktuellerZustand().getSpieler();
+		final int aktuellerSpielerIdx = masterController.getDungeonRoll().getAktuellerZustand().getSpielerIndex();
+		Spieler aktuellerSpieler = alleSpieler.get(aktuellerSpielerIdx);
+		return aktuellerSpieler.getSpielerWerte().getSchaetze();
+	}
+
+}

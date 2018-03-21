@@ -1,0 +1,25 @@
+package model;
+
+/**Das Heldtyp-Enum dient der Unterscheidung verschiedener Typen von Helden. Dies ist relevant f�r die
+ * unterschiedlichen Heldenf�higkeiten verschiedner Helden.
+ * @author Rahel
+ *
+ */
+public enum Heldtyp {
+
+	KREUZRITTERPALADININ,
+
+	MINNESAENGERBARDE,
+
+	RITTERDRACHENTOETER,
+
+	SOELDNERKOMMANDANT,
+
+	HALBKOBOLDHAEUPTLING,
+
+	ARKANTERSCHWERTMEISTERKAMPFMAGIER,
+
+	ADEPTINHEXE,
+
+	OKKULTISTINTOTENBESCHWOERERIN;
+}

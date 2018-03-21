@@ -1,0 +1,7 @@
+package control.regeln;
+
+import control.RegelController;
+
+public class PaladininRegel extends RegelController {
+
+}

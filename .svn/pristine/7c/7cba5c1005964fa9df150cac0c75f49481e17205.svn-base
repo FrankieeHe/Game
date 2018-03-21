@@ -1,0 +1,178 @@
+package gui.heldenkartenWaehlen;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import control.MasterController;
+import gui.startbildschirm.StartbildschirmController;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Region;
+import javafx.scene.text.Text;
+
+public class HeldenkartenWaehlenController {
+
+	MasterController masterController;
+
+	@FXML
+	private Text spieler1Text;
+
+	@FXML
+	private Text spieler2Text;
+
+	@FXML
+	private Text spieler3Text;
+
+	@FXML
+	private Text spieler4Text;
+
+	@FXML
+	private ChoiceBox<String> spieler1Box;
+
+	@FXML
+	private ChoiceBox<String> spieler2Box;
+
+	@FXML
+	private ChoiceBox<String> spieler3Box;
+
+	@FXML
+	private ChoiceBox<String> spieler4Box;
+
+	@FXML
+	private Button abbrechenButton;
+
+	@FXML
+	private Button oKButton;
+
+	@FXML
+	private AnchorPane pane;
+
+	public void initialize() {
+		ObservableList<String> list = FXCollections.observableArrayList("Kreuzritter\nPaladin", "Minnesänger\nBarde",
+				"Ritter\nDrachentöter", "Söldner\nKommandant", "Halbkobold\nHäuptling",
+				"Arkanenschwertmeister\nKampfmagier", "Adeptin\nHexe", "Okkultistin\nTotenbeschwörerin");
+		spieler1Box.setItems(list);
+		spieler2Box.setItems(list);
+		spieler3Box.setItems(list);
+		spieler4Box.setItems(list);
+	}
+
+	public void setSpielernamen(List<String> namen) {
+		switch (namen.size()) {
+		case 1:
+			spieler1Text.setText(namen.get(0));
+			spieler2Text.setVisible(false);
+			spieler3Text.setVisible(false);
+			spieler4Text.setVisible(false);
+			spieler2Box.setVisible(false);
+			spieler3Box.setVisible(false);
+			spieler4Box.setVisible(false);
+			break;
+		case 2:
+			spieler1Text.setText(namen.get(0));
+			spieler2Text.setText(namen.get(1));
+			spieler3Text.setVisible(false);
+			spieler4Text.setVisible(false);
+			spieler3Box.setVisible(false);
+			spieler4Box.setVisible(false);
+			break;
+			
+		case 3:
+			spieler1Text.setText(namen.get(0));
+			spieler2Text.setText(namen.get(1));
+			spieler3Text.setText(namen.get(2));
+			spieler4Text.setVisible(false);
+			spieler4Box.setVisible(false);
+			break;
+		case 4:
+			spieler1Text.setText(namen.get(0));
+			spieler2Text.setText(namen.get(1));
+			spieler3Text.setText(namen.get(2));
+			spieler4Text.setText(namen.get(3));
+			break;
+		}
+	}
+
+	public void setMasterController(MasterController masterController) {
+		this.masterController = masterController;
+	}
+
+	@FXML
+	void abbrechen(ActionEvent event) {
+
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setTitle("Abbrechen");
+		alert.setHeaderText("Sie brechen die Konfiguration des neuen Spiels komplett ab.");
+		alert.setContentText("Möchten Sie die Konfiguration des neuen Spiels wirklich komplett abbrechen?");
+
+		Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == ButtonType.OK) {
+			FXMLLoader loader = new FXMLLoader();
+			try {
+				loader.setLocation(getClass().getResource("/gui/startbildschirm/Startbildschirm.fxml"));
+				Parent root = loader.load();
+
+				StartbildschirmController controller = loader.getController();
+				controller.setMasterController(masterController);
+
+				pane.getChildren().clear();
+				pane.getChildren().add(root);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@FXML
+	void ok(ActionEvent event) {
+		if(heldenDoppeltGewaehlt()) {
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Eingabefehler");
+			alert.setHeaderText("Sie haben eine Heldenkarte mindestens doppelt ausgewählt.");
+			alert.setContentText("Bitte wählen Sie keine Heldenkarten doppelt aus!.");
+			alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+			alert.showAndWait();
+		}
+		else spielStarten();
+
+	}
+
+	public boolean heldenDoppeltGewaehlt() {
+		ArrayList<String> list = new ArrayList<String>();
+		if (spieler1Box.getValue() != null && !spieler1Box.getValue().equals(""))
+			list.add(spieler1Box.getValue());
+		if (spieler2Box.getValue() != null && !spieler2Box.getValue().equals(""))
+			list.add(spieler2Box.getValue());
+		if (spieler3Box.getValue() != null && !spieler3Box.getValue().equals(""))
+			list.add(spieler3Box.getValue());
+		if (spieler4Box.getValue() != null && !spieler4Box.getValue().equals(""))
+			list.add(spieler4Box.getValue());
+		for (int i = 0; i < list.size(); i++) {
+			for (int j = 0; j < list.size(); j++) {
+				if (i != j && list.get(i).equals(list.get(j))) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Erstellt die Liste mit den Spielern und ruft auf dem MasterController {@code spielStarten auf}.
+	 */
+	private void spielStarten()
+	{
+		
+	}
+}

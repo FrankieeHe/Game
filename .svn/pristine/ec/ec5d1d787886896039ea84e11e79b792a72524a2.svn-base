@@ -1,0 +1,119 @@
+package control;
+
+import model.Abenteuer;
+import model.Phase;
+import model.SchwarzeWuerfelseite;
+import model.Wuerfel;
+
+/**
+ * Der Controller fuer das Abenteuer
+ * 
+ * @author Dong
+ *
+ */
+public class AbenteuerController {
+	private Abenteuer abenteuer;
+	/**
+	 * MasterController des Projektes. Mit Hilfe von MasterController bekommt
+	 * AbenteuerController Zugriff zu DungeonRoll und anderen Controllers.
+	 */
+	private MasterController masterController;
+
+	/**
+	 * Konstruktor, produkziert eine AbenteuerController.
+	 * 
+	 * @param masterController
+	 *            MasterController des Projektes.
+	 */
+	public AbenteuerController(MasterController masterController) {
+		this.masterController = masterController;
+		this.abenteuer = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer();
+	}
+
+	/**
+	 * Ein neues Abenteuer zu erstellen und anfang.
+	 */
+	public void neuesAbenteuerErstellen() {
+
+	}
+
+	/**
+	 * Akteueres Abenteuer zu beenden. Der bisher geschafft Erfahrungpunkt wird
+	 * berechnet und die Ultimative Faehigkeit des Helds rueckgesetzt. Der Spieler
+	 * sitzt in Ruhe. Der Spielzustand wird am Ende gespeichert.
+	 */
+	public void abenteuerBeenden() {
+
+	}
+
+	/**
+	 * welchseln der Spiel in naechsten Level. Nur Dungeon Wuerfel wird in Anzahl
+	 * von neuem Level gewuerfelt. aktuellePhase wird auf WUERFELPHASE gesetzt
+	 */
+	public void naechstesLevel() {
+		if (this.abenteuer.getPhase() != Phase.UMGRUPPIERUNGSPHASE) {
+			System.err.println("Only in UMGRUPPIERUNGSPHASE to next level allowed");
+			return;
+		}
+		int aktueLevel = this.abenteuer.getLevel() + 1;
+		this.abenteuer.setLevel(aktueLevel);
+		if (aktueLevel >= 5) {
+			this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().setLevelUp(true);
+			this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+					.setUltimativeEingesetzt(false);
+		}
+		// zu next Phase wechseln, sgn Wurfelpahse
+		phaseWechseln();
+
+	}
+
+	/**
+	 * welchseln die aktuellePhase des Spiels in naechste Phase. die Reinfolge von
+	 * Phase ist allgemein im Zyklus als WUEFELPHASE,KAMPFPHASE, PLUENDERPHASE,
+	 * DRACHENPHASE, UMGRUPPIERUNGSPHASE
+	 */
+	public void phaseWechseln() {
+		switch (this.abenteuer.getPhase()) {
+		case WUERFELPHASE:
+			this.abenteuer.setPhase(Phase.KAMPFPHASE);
+			break;
+		case KAMPFPHASE:
+			for (Wuerfel sw : this.abenteuer.getDungeon()) {
+				if (sw.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRANK)) {
+					continue;
+				}else if (sw.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRUHE)) {
+					continue;
+				}else {
+					System.err.println("Darf kein Monster von KAMPFPHASE to PLUENDERPHASE ");
+					return;
+				}
+			}
+			this.abenteuer.setPhase(Phase.PLUENDERPHASE);
+			break;
+		case PLUENDERPHASE:
+			int drachenkopf = this.abenteuer.getDrachen().size();
+			int d_dungeon = drachenkopf/3;
+			int d_Drachen = drachenkopf%3;
+			for(int i = 0 ;i <d_dungeon ;i++) {
+				for(int j =0;j<3;j++) {
+				int l = this.abenteuer.getDrachen().size();
+				//zo b continui
+				this.abenteuer.getDrachen().remove(l-1);
+				}
+				this.abenteuer.getDungeon().add(null);
+			}
+			this.abenteuer.setPhase(Phase.DRACHENPHASE);
+			break;
+		case DRACHENPHASE:
+			this.abenteuer.setPhase(Phase.UMGRUPPIERUNGSPHASE);
+			break;
+		case UMGRUPPIERUNGSPHASE:
+			this.abenteuer.setPhase(Phase.WUERFELPHASE);
+			break;
+		default:
+			break;
+
+		}
+	}
+
+}

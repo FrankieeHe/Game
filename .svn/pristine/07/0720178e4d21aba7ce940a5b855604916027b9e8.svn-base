@@ -1,0 +1,121 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Held;
+import model.Heldtyp;
+import model.Quelle;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+public class SoeldnerRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		// TODO Auto-generated method stub
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		if (quelle.alsHeld() == null) {
+			
+			//Ein Krieger kann noch zusaatzlich Monster besiegen
+			if(quelle.alsWuerfel().getWeisseWuerfelseite()==WeisseWuerfelseite.KRIEGER&&
+					masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().isLevelUp()&&
+					masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().getHeldtyp().equals(Heldtyp.SOELDNERKOMMANDANT)) 
+			{
+				int zusatzMonster=0;
+				for(Ziel z :ziel) {
+					if(z.alsWuerfel().getSchwarzeWuerfelseite()==SchwarzeWuerfelseite.KOBOLD) {
+						continue;
+						}else {
+							if(z.alsWuerfel().getSchwarzeWuerfelseite()==SchwarzeWuerfelseite.TRANK||z.alsWuerfel().getSchwarzeWuerfelseite()==SchwarzeWuerfelseite.TRUHE) {return false;}
+							zusatzMonster++;			
+						}
+				}
+				
+				if(zusatzMonster<=1) {
+					return true;
+				}else {
+					return false;
+				}
+			}
+			
+			return false;
+		}
+		Held held = quelle.alsHeld();
+		if (held.getHeldtyp() != Heldtyp.SOELDNERKOMMANDANT) {
+			return false;
+		}
+		
+		if(held.isLevelUp()) {
+			return false;
+		}
+		
+		if(held.isUltimativeEingesetzt()) {
+			return false;
+		}
+		if (ziel.size() != 2) {
+			return false;
+		}
+		for (Ziel aktuellesZiel : ziel) {
+			// Ziele muessen Wuerfel sein
+			if (aktuellesZiel.alsWuerfel() == null) {
+				return false;
+			} else {
+				Wuerfel wuerfel = aktuellesZiel.alsWuerfel();
+				// Ziele sind schwarze wuerfel
+				if (wuerfel.isWeiss()) {
+					return false;
+				} else {
+					// Pruefen ob es Monsterwuerfel sind
+					if (wuerfel.getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.TRANK
+							|| wuerfel.getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.TRUHE) {
+						return false;
+					}
+					// Pruefen, ob die Wuerfel in der Drachenhoehle enthalten sind
+					if (masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDrachen()
+							.contains(wuerfel)) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		// Spielzustand klonen und aktualisieren
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand().neuenSpielzustandErzeugen();
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+		
+		if (quelle.alsWuerfel() != null) {
+			masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten().remove(quelle.alsWuerfel());
+			for(Ziel aktuellesZiel : ziel) {
+				masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon().remove(aktuellesZiel);
+			}
+			masterController.getAbenteuerController().phaseWechseln();
+			return;
+		}
+		
+		//Monster besiegen
+		for(Ziel aktuellesZiel : ziel) {
+			masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon().remove(aktuellesZiel);
+		}
+		
+		// UF auf genutzt setzen
+		masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().setUltimativeEingesetzt(true);
+		
+		// Phasen wechsel
+		masterController.getAbenteuerController().phaseWechseln();
+		
+	}
+
+}

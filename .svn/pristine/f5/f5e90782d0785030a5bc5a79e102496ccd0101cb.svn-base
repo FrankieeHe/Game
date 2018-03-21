@@ -1,0 +1,13 @@
+package control;
+
+import model.Spielzustand;
+
+public class KIController {
+
+	private MasterController masterController;
+
+	public void tippHolen(Spielzustand spiel) {
+
+	}
+
+}

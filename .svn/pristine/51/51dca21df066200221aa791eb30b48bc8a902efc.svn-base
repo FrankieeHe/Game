@@ -1,0 +1,246 @@
+package control.regeln;
+
+import java.util.List;
+import control.MasterController;
+import control.RegelController;
+import model.Held;
+import model.Heldtyp;
+import model.Phase;
+import model.Quelle;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+/**
+ * @description Regel fuer die MonsterPhase
+ * 
+ * @author sopr102
+ *
+ */
+
+public class MonsterPhasenRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		super.setMasterController(masterController);
+	}
+
+	/**
+	 *@description Realsiert die Kampfregeln der Kampfphase gegen Monster 
+	 *	 * 
+	 * @param quelle
+	 *            Ursache fuer die Aktion
+	 * @param ziel 
+	 * 				Monster die bekaempft werden sollen
+	 * @return true wenn Monster mit dem gewaehlten Gefaherten(jeglicher Art) besiegt werden koennen
+	 * @return false wenn Monster so nicht besiegt werden koennen
+	 */
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		
+		boolean zieleOk, quelleOk = false, phaseOk = Phase.KAMPFPHASE == masterController.getDungeonRoll()
+				.getAktuellerZustand().getAbenteuer().getPhase();
+		// Pruefe ob alle Ziele Wuerfel sind
+		zieleOk = ziel.stream().allMatch(aktuellesZiel -> {
+			return (aktuellesZiel.alsWuerfel() != null) && (isErlaubtesMonster(aktuellesZiel.alsWuerfel()));
+		});
+
+		if (quelle.alsHeld() != null) {
+			quelleOk = testeFaehigkeitHelden(quelle.alsHeld(), ziel);
+		} else if (quelle.alsSchatz() != null) {
+			// Erstellt einen Wuerfel, dreht diesen auf die entsprechende Gefaehrtenseite und ruft anschließend die 
+			// Gefaehrten Test Methode auf
+			Wuerfel schatzWuerfel = new Wuerfel(true);
+			switch (quelle.alsSchatz()) {
+			case DIEBESWERKZEUG:
+				masterController.getWuerfelController().wuerfelseiteErsetzen(schatzWuerfel, WeisseWuerfelseite.DIEB);
+				break;
+			case KOEPFERKLINGE:
+				masterController.getWuerfelController().wuerfelseiteErsetzen(schatzWuerfel, WeisseWuerfelseite.KRIEGER);
+				break;
+			case SPRUCHROLLE:
+				masterController.getWuerfelController().wuerfelseiteErsetzen(schatzWuerfel,
+						WeisseWuerfelseite.SPRUCHROLLE);
+				break;
+			case TALISMAN:
+				masterController.getWuerfelController().wuerfelseiteErsetzen(schatzWuerfel,
+						WeisseWuerfelseite.PRIESTER);
+				break;
+			case ZEPTERDERMACHT:
+				masterController.getWuerfelController().wuerfelseiteErsetzen(schatzWuerfel,
+						WeisseWuerfelseite.ZAUBERER);
+				break;
+			default:
+				return false;
+			}
+			quelleOk = testeGefaehrten(schatzWuerfel, ziel);
+		} else// Teste Gefährten
+		if (quelle.alsWuerfel() != null)
+			quelleOk = testeGefaehrten(quelle.alsWuerfel(), ziel);
+
+		return zieleOk && quelleOk && phaseOk;
+	}
+	
+	
+	/**
+	 * @description Geprueft wird, ob man die uebergebene Zielliste, mit dem gewaehlten Wuerfel, 
+	 *  			unter Beachtung der Heldenfaehigkeiten, besiegen kann
+	 * @param wuerfel Gefaehrte
+	 * @param ziel Zielliste
+	 * @return true wenn Gefaehrtenwuerfel die Ziele besigen koennen
+	 * @return false wenn Gefaehrtenwuerfel die Ziele nicht besiegen koennen
+	 */
+	private boolean testeGefaehrten(Wuerfel wuerfel, List<Ziel> ziel) {
+		if (!wuerfel.isWeiss())// Gefaehrten sind weiss
+			return false;
+		switch (wuerfel.getWeisseWuerfelseite()) {
+		case CHAMPION:
+			// Barde kann mit Champion ein bel. extra Monster umhauen
+			if (masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+					.getHeldtyp() == Heldtyp.MINNESAENGERBARDE
+					&& masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+							.isLevelUp()) {
+				int[] anzMonster = new int[3];
+				for (Ziel z : ziel) {
+					switch (z.alsWuerfel().getSchwarzeWuerfelseite()) {
+					case KOBOLD:
+						anzMonster[0]++;
+						break;
+					case SCHLEIMWESEN:
+						anzMonster[1]++;
+						break;
+					case SKELETT:
+						anzMonster[2]++;
+						break;
+					default:
+						break;
+					}
+				}
+				if ((anzMonster[0] == 0 && anzMonster[1] <= 1 && anzMonster[2] >= 1)
+						|| (anzMonster[0] == 0 && anzMonster[1] >= 1 && anzMonster[2] <= 1)
+						|| (anzMonster[0] <= 1 && anzMonster[1] >= 1 && anzMonster[2] == 0)
+						|| (anzMonster[0] <= 1 && anzMonster[1] == 0 && anzMonster[2] >= 1)
+						|| (anzMonster[0] >= 1 && anzMonster[1] <= 1 && anzMonster[2] == 0)
+						|| (anzMonster[0] >= 1 && anzMonster[1] == 0 && anzMonster[2] <= 1)) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				SchwarzeWuerfelseite sSeite = ziel.get(0).alsWuerfel().getSchwarzeWuerfelseite();
+				return ziel.stream().allMatch(z -> z.alsWuerfel().getSchwarzeWuerfelseite() == sSeite);
+			}
+		case DIEB:
+			return ziel.size() == 1;
+		case KRIEGER:
+			boolean isKommandant = (masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+					.getHeldtyp() == Heldtyp.SOELDNERKOMMANDANT
+					&& masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+							.isLevelUp());
+			int kobolde = 0, andere = 0;
+			for (Ziel z : ziel) {
+				if (z.alsWuerfel().getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.KOBOLD)
+					kobolde++;
+				else
+					andere++;
+			}
+			return isKommandant ? andere <= 1 || (andere <= 2 && kobolde == 0)
+					: andere == 0 || (andere <= 1 && kobolde == 0);
+		case PRIESTER:
+			return ziel.size() == 1 || ziel.stream()
+					.allMatch(z -> z.alsWuerfel().getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.SKELETT);
+		case SPRUCHROLLE:
+			if (masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+					.getHeldtyp() == Heldtyp.ADEPTINHEXE) {
+				wuerfel.setWeisseWuerfelseite(WeisseWuerfelseite.CHAMPION);
+				return testeGefaehrten(wuerfel, ziel);
+			}
+			return false;
+		case ZAUBERER:
+			return ziel.size() == 1 || ziel.stream()
+					.allMatch(z -> z.alsWuerfel().getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.SCHLEIMWESEN);
+		default:
+			return false;
+
+		}
+	}
+	
+	/**
+	 * @description Prueft ob der Wuerfel ein Monster ist, Kobold kann auch Drachen erledigen
+	 * @param schwarzeWuerfelseite
+	 * @return true, wenn Wuerfel ein gueltiges Monster ist
+	 * @return false, wenn Wuerfel ein ungueltiges Monster ist
+	 */
+	private boolean isErlaubtesMonster(Wuerfel schwarzeWuerfelseite) {
+		Heldtyp heldtyp = masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+				.getHeldtyp();
+		return schwarzeWuerfelseite.getSchwarzeWuerfelseite() != null
+				&& (heldtyp == Heldtyp.HALBKOBOLDHAEUPTLING || schwarzeWuerfelseite.isMonster());
+	}
+	
+	/**
+	 * @description Prueft, ob man mit dem gewaehlten Held, die Ziele besiegen kann
+	 * @param quelle Held der Monster besiegen soll
+	 * @param ziel Monster die besiegt werden sollen
+	 * @return true, wenn Monster besiegt werden koennen
+	 * @return false wenn Monster nicht besiegt werden koennen
+	 */
+	private boolean testeFaehigkeitHelden(Held quelle, List<Ziel> ziel) {
+		// Ultimative Faehigkeit darf noch nicht benutzt sein
+		if(quelle.isUltimativeEingesetzt()){
+			return false;
+		}
+		Wuerfel wuerfel1 = new Wuerfel(true);
+		Wuerfel wuerfel2 = new Wuerfel(true);
+		switch (quelle.getHeldtyp()) {
+
+		case KREUZRITTERINPALADININ: // Kann 1x pro Abenteuer als Krieger oder Priester genutzt werden
+			wuerfel1.setWeisseWuerfelseite(WeisseWuerfelseite.KRIEGER);
+			wuerfel2.setWeisseWuerfelseite(WeisseWuerfelseite.PRIESTER);
+			return testeGefaehrten(wuerfel1, ziel) || testeGefaehrten(wuerfel2, ziel);
+		case ARKANERSCHWERTMEISTERKAMPFMAGIER: // Kann 1x pro Abenteuer als Krieger oder Zauberer genutzt werden
+			wuerfel1.setWeisseWuerfelseite(WeisseWuerfelseite.KRIEGER);
+			wuerfel2.setWeisseWuerfelseite(WeisseWuerfelseite.ZAUBERER);
+			return testeGefaehrten(wuerfel1, ziel) || testeGefaehrten(wuerfel2, ziel);
+		default: // Kein passender Held
+			return false;
+		}
+	}
+
+	/**
+	 * @description Setzt das Regelausfuehren um <br>
+	 * 				 Dabei wird die Faehigkeit auf Genutzt gesetzt, der Schatz entfernt oder der Gefaehrte auf
+	 * 				 den Friedhof verschoben
+	 * @param quelle
+	 *            Ursache fuer die Aktion
+	 * @param ziel Monster die besiegt werden sollen
+	 * 
+	 */
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		// Spielzustand klonen und aktualisieren
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand()
+				.neuenSpielzustandErzeugen();
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+		//Genutzt setzen
+		if (quelle.alsHeld() != null) {
+			masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+					.setUltimativeEingesetzt(true);
+		} else if (quelle.alsSchatz() != null) {
+			masterController.getSchatzController().schatzZuruecklegen(quelle.alsSchatz());
+		} else {
+			masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten()
+					.remove(quelle.alsWuerfel());
+			masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getFriedhof()
+					.add(quelle.alsWuerfel());
+		}
+		//Monster besiegen
+		for(Ziel z : ziel){
+			masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon().remove(z.alsWuerfel());
+		}
+		//Phasen wechsel
+		masterController.getAbenteuerController().phaseWechseln();
+	}
+}

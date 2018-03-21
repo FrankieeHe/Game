@@ -1,0 +1,81 @@
+package control;
+
+import gui.spielfeld.SpielfeldAUI;
+import gui.spielfeld.SpielfeldController;
+import model.Action;
+import model.DungeonRoll;
+import model.KI;
+import model.Spielzustand;
+import model.KI.DefaultPossibleMoveGenerator;
+import model.KI.PossibleActionGenerator;
+import model.Spieler;
+import sun.net.www.protocol.http.spnego.NegotiateCallbackHandler;
+
+
+public class KIController {
+
+	private KI ki;
+	private MasterController masterController;
+	
+	private PossibleActionGenerator actionGenerator;
+	
+	public KIController(MasterController masterController) {
+		actionGenerator = new DefaultPossibleMoveGenerator(ki, masterController.getAuswahlController());
+	}
+
+	public final void setKi(KI ki) {
+		this.ki = ki;
+	}
+
+	public Action tippHolen(Spielzustand spiel) {
+		return ki.getAction(KI.DefaultValueFunction, actionGenerator, KI.DefaultRisikoFunction, spiel);
+	}
+	
+	/**
+	 * @author Merle
+	 * @description Methode sorgt dafuer, das zwischen zwei KI zuegen pause ist, damit der 
+	 * Nutzer verfolgen kann, was die KI macht
+	 * @preconditions Die Funktion neues Abenteuer erstellen wurde aufgerufen, und 
+	 * der dadurch an die Reihe kommende Spieler ist eine KI
+	 */
+	public void zugKI() {
+		// Zeige ersten Spielzustand 10 Sekunden an
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			System.out.println("Hier lief was falsch...");
+			System.err.println("KI CONTROLLER zugKI");
+		}
+		DungeonRoll dungeonRoll = masterController.getDungeonRoll();
+		Spielzustand spielzustand = dungeonRoll.getAktuellerZustand();
+		Spieler aktuellerSpieler = dungeonRoll.getAktuellerZustand().aktuellerSpieler();
+		KI aktuelleKI = (KI)aktuellerSpieler;
+		Action naechsterKIZug = aktuelleKI.getAction(spielzustand);
+		
+		
+		
+		// Solange Zuege moeglich sind
+		while(naechsterKIZug != null) {
+			// Zug ausfuehren
+			naechsterKIZug.apply(spielzustand);
+			//TODO  Phase aktualisieren ?
+			
+			// Neuen Spielzustand zeigen
+			SpielfeldController spielfeldController = new SpielfeldController();
+			spielfeldController.refresh();
+			
+			// Schlafen
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				System.out.println("Hier lief was falsch...");
+				System.err.println("KI CONTROLLER zugKI");
+			}
+			// 
+			//Naechsten Zug holen
+			naechsterKIZug = aktuelleKI.getAction();
+			spielzustand = dungeonRoll.getAktuellerZustand();;
+		}
+	}
+
+}

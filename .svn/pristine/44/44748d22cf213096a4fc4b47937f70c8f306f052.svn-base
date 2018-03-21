@@ -1,0 +1,196 @@
+package control.regeln;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Abenteuer;
+import model.DungeonRoll;
+import model.Phase;
+import model.Quelle;
+import model.SchwarzeWuerfelseite;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+/**
+ * Regel fuer die MonsterPhase,
+ * 
+ * @author sopr102
+ *
+ */
+
+public class MonsterPhasenRegel extends RegelController {
+	private DungeonRoll dungeonRoll;
+
+	public MonsterPhasenRegel(MasterController masterController) {
+		this.masterController = masterController;
+		this.dungeonRoll = masterController.getDungeonRoll();
+	}
+	
+	public MonsterPhasenRegel() {
+		
+	}
+
+	/**
+	 * implementiert die Regeln abgeleitet vom RegelController fuer Monster Phase
+	 * 
+	 * @param quelle
+	 *            Ursache fuer die Aktion
+	 * @param Ursache
+	 *            fuer die Aktion * <br/>
+	 * @return Bei Monster Phase die Ziele als DRACHENKOPF oder TRANK wird direkt
+	 *         false zurueckgeben. Sonsts nach dem Regeln anzupassen.
+	 */
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+
+		List<Wuerfel> myZiels = new ArrayList<Wuerfel>();
+
+		//erst muss  pruefen dass alle Ziele sind Wuefel
+		for (Ziel z : ziel) {
+			if (z.alsWuerfel() == null) {
+				System.out.println("passed a ziel keines Wuerfel in MonsterPhasenRgeel!");
+				return false;
+			}
+			myZiels.add(z.alsWuerfel());
+		}
+
+		if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.SPRUCHROLLE)) {
+			return true;
+		}
+		
+		//kriegen all Type vom dem Schwatzwuerfel, wenn die Quelle keine Spruchrolle ist
+		int ko = 0, sc = 0, sk = 0;
+		for (Wuerfel w : myZiels) {
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.DRACHENKOPF)) {
+				return false;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRANK)) {
+				return false;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.TRUHE)) {
+				return false;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.KOBOLD)) {
+				ko += 1;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.SCHLEIMWESEN)) {
+				sc += 1;
+			}
+			if (w.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.SKELETT)) {
+				sk = 1;
+			}
+		}
+
+		if (ko != myZiels.size() && sc != myZiels.size() && sk != myZiels.size()) {
+			return false;
+		}
+
+		if (this.dungeonRoll.getAktuellerZustand().getAbenteuer().getPhase().equals(Phase.KAMPFPHASE)) {
+
+			if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.CHAMPION)) {
+				return true;
+			}
+			if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.KRIEGER)) {
+				if (myZiels.size() == 1) {
+					return true;
+				} else if (myZiels.size() == ko) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+			if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.PRIESTER)) {
+				if (myZiels.size() == 1) {
+					return true;
+				} else if (myZiels.size() == sk) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+			if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.ZAUBERER)) {
+				if (myZiels.size() == 1) {
+					return true;
+				} else if (myZiels.size() == sc) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+			if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.DIEB)) {
+				if (myZiels.size() == 1) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * implementiert die Regeln Ausfuerhren abgeleitet vom RegelController fuer
+	 * Monster Phase
+	 * 
+	 * @param quelle
+	 *            Ursache fuer die Aktion
+	 * @param Ursache
+	 *            fuer die Aktion * <br/>
+	 * @description Bei Anfang wird die quelle aus dem Gefaehrten entfernt, und
+	 *              ziele aus dem Dungeon. Bei Spruchrolle muss die neu gewuerfelte
+	 *              Wurfeln wieder in Spiel hinzufuegen.
+	 */
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+
+		Abenteuer a = this.dungeonRoll.getAktuellerZustand().getAbenteuer();
+
+		if (!a.getGefaehrten().remove(quelle.alsWuerfel())) {
+			System.out.println("regel aus fuhren Error when remove the Wurfel aus dem Gruppen");
+		}
+		a.getFriedhof().add(quelle.alsWuerfel());
+
+		List<Wuerfel> myZiels = new ArrayList<Wuerfel>();
+
+		if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.SPRUCHROLLE)) {
+			for (Ziel z : ziel) {
+				if (z.alsWuerfel().getWeisseWuerfelseite() != null) {
+					if (!a.getGefaehrten().remove(z.alsWuerfel())) {
+						System.out.println("regel aus fuhren Error when remove the Wurfel aus Friedhof");
+					}
+				}
+				if (z.alsWuerfel().getSchwarzeWuerfelseite() != null) {
+					if (!a.getDungeon().remove(z.alsWuerfel())) {
+						System.out.println("regel aus fuhren Error when remove the Wurfel aus Friedhof");
+					}
+				}
+				myZiels.add(z.alsWuerfel());
+			}
+		} else {//wenn es keine Spruchrolle ist, muss die Ziele nur Monster sein, einfacgh aus dem Dungeon entfernen
+			for (Ziel z : ziel) {
+				if (!a.getDungeon().remove(z.alsWuerfel())) {
+					System.out.println("regel aus fuhren Error when remove the Wurfel aus Dungeon");
+				}
+				myZiels.add(z.alsWuerfel());
+			}
+		}
+
+		if (quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.SPRUCHROLLE)) {
+			this.masterController.getWuerfelController().wuerfeln(myZiels);
+
+			for (Wuerfel myz : myZiels) {
+				if (myz.getSchwarzeWuerfelseite().equals(SchwarzeWuerfelseite.DRACHENKOPF)) {
+					a.getDrachen().add(myz);
+				} else if (myz.getSchwarzeWuerfelseite() != null) {
+					a.getDungeon().add(myz);
+				} else {
+					a.getGefaehrten().add(myz);
+				}
+			}
+		}
+
+	}
+}

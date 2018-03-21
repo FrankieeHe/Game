@@ -1,0 +1,30 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Quelle;
+import model.Ziel;
+
+public class DrachentoeterRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		// TODO Auto-generated method stub
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		// TODO Auto-generated method stub
+		return super.pruefeAuswahlErlaubt(quelle, ziel);
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		// TODO Auto-generated method stub
+		super.regelAusfuehren(quelle, ziel);
+	}
+
+}

@@ -1,0 +1,41 @@
+package control;
+
+import model.Wuerfel;
+import model.WeisseWuerfelseite;
+import java.util.List;
+import model.SchwarzeWuerfelseite;
+
+public class WuerfelController {
+
+	private MasterController masterController;
+
+	/**
+	 * Ersetzt den Wurfelseite des weissen Wurfel "wurfel" durch der Seite "seite"
+	 * @param wuerfel - der Wurfel, der bearbeitet wird
+	 * @param seite - die weisse Seite, durch die die Seite von Wurfel ersetzt wird
+	 */
+	public void wuerfelseiteErsetzen(Wuerfel wuerfel, WeisseWuerfelseite seite) {
+        wuerfel.setWeisseWuerfelseite(seite);
+	}
+
+	/**
+	 * Ersetzt den Wurfelseite des schwarzen Wurfel "wurfel" durch der Seite "seite"
+	 * @param wuerfel - der Wurfel, der bearbeitet wird
+	 * @param seite - die schwarze Seite, durch die die Seite von Wurfel ersetzt wird
+	 */
+	public void wuerfelseiteErsetzen(Wuerfel wuerfel, SchwarzeWuerfelseite seite) {
+        wuerfel.setSchwarzeWuerfelseite(seite);
+	}
+	
+	/**
+	 * alle Wurfeln der List werden gewurfelt
+	 * @param wuerfelListe - die Liste, die gewurfelt wird
+	 */
+	public void wuerfeln(List<Wuerfel> wuerfelListe) {
+		
+		for(Wuerfel w : wuerfelListe) {
+			w.wuerfeln();
+		}
+	}	
+
+}

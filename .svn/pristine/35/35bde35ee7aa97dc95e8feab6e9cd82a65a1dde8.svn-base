@@ -1,0 +1,166 @@
+package gui.spielerWaehlen;
+
+import control.MasterController;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.Region;
+
+public class SpielerWaehlenController {
+
+	MasterController masterController;
+
+	@FXML
+	private TextField spieler1Feld;
+
+	@FXML
+	private TextField spieler2Feld;
+
+	@FXML
+	private TextField spieler3Feld;
+
+	@FXML
+	private TextField spieler4Feld;
+
+	@FXML
+	private ComboBox<String> KI1Box;
+
+	@FXML
+	private ComboBox<String> KI2Box;
+
+	@FXML
+	private ComboBox<String> KI3Box;
+
+	@FXML
+	private ComboBox<String> KI4Box;
+
+	@FXML
+	private Button abbrechenButton;
+
+	@FXML
+	private TextField rundenzahlFeld;
+
+	@FXML
+	private Button oKButton;
+
+	void setMasterController(MasterController masterController) {
+		this.masterController = masterController;
+	}
+	
+	@FXML
+	void initialize() {
+		KI1Box.getItems().addAll("", "VORSICHTIG", "AUSGEGLICHEN", "RISIKOFREUDIG");
+		KI2Box.getItems().addAll("", "VORSICHTIG", "AUSGEGLICHEN", "RISIKOFREUDIG");
+		KI3Box.getItems().addAll("", "VORSICHTIG", "AUSGEGLICHEN", "RISIKOFREUDIG");
+		KI4Box.getItems().addAll("", "VORSICHTIG", "AUSGEGLICHEN", "RISIKOFREUDIG");
+		KI1Box.setValue("");
+		KI2Box.setValue("");
+		KI3Box.setValue("");
+		KI4Box.setValue("");
+	}
+
+	@FXML
+	void abbrechen(ActionEvent event) {
+
+	}
+
+	@FXML
+	void ok(ActionEvent event) {
+		if(mehrAlsVier()) {
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Eingabefehler");
+			alert.setHeaderText("Es sind maximal vier Spieler möglich.");
+			alert.setContentText("Bitte geben Sie maximal vier Spieler an!");
+			alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+			alert.showAndWait();
+		}
+		
+		if(rundenzahlFeld.getText().equals(""))
+		{
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Eingabefehler");
+			alert.setHeaderText("Es muss eine Rundenzahl angebeben werden.");
+			alert.setContentText("Bitte geben Sie eine Rundenzahl an!");
+			alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+			alert.showAndWait();
+		}
+		
+		else try {
+			Integer.parseInt(rundenzahlFeld.getText());
+			if (Integer.parseInt(rundenzahlFeld.getText()) < 1) RundenzahlFehlerAnzeigen();
+		}
+		catch (Exception e)
+		{
+			RundenzahlFehlerAnzeigen();
+		}
+
+	}
+
+	@FXML
+	void rundenzahlEingeben(ActionEvent event) {
+	}
+
+	@FXML
+	void spieler1Eingeben(ActionEvent event) {
+
+	}
+
+	@FXML
+	void spieler2Eingeben(ActionEvent event) {
+
+	}
+
+	@FXML
+	void spieler3Eingeben(ActionEvent event) {
+
+	}
+
+	@FXML
+	void spieler4Eingeben(ActionEvent event) {
+	}
+	
+	@FXML
+	void KI1Eingeben(ActionEvent event) {
+	}
+	
+	@FXML
+	void KI2Eingeben(ActionEvent event) {
+	}
+	
+	@FXML
+	void KI3Eingeben(ActionEvent event) {
+	}
+	
+	@FXML
+	void KI4Eingeben(ActionEvent event) {
+	}
+
+	private boolean mehrAlsVier()
+	{
+		int count = 0;
+		if(!spieler1Feld.getText().equals("")) count++;
+		if(!spieler2Feld.getText().equals("")) count++;
+		if(!spieler3Feld.getText().equals("")) count++;
+		if(!spieler4Feld.getText().equals("")) count++;
+		if(!KI1Box.getValue().equals("")) count ++;
+		if(!KI2Box.getValue().equals("")) count ++;
+		if(!KI3Box.getValue().equals("")) count ++;
+		if(!KI4Box.getValue().equals("")) count ++;
+
+		if (count > 4) return true;
+		return false;
+	}
+	
+	private void RundenzahlFehlerAnzeigen() {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Eingabefehler");
+		alert.setHeaderText("Es muss als Rundenzahl eine natürliche Zahl angebeben werden.");
+		alert.setContentText("Bitte geben Sie eine natürliche Zahl an.");
+		alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+		alert.showAndWait();
+	}
+}

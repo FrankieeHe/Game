@@ -1,0 +1,51 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Heldtyp;
+import model.Quelle;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+/**
+ * 
+ * @author sopr104
+ *
+ */
+public class HeldAlsGefaehrte extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		// TODO Auto-generated method stub
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		// quelle prüfen
+		if(quelle.alsHeld().isUltimativeEingesetzt()) return false;
+		if(!Heldtyp.ARKANTERSCHWERTMEISTERKAMPFMAGIER.equals(quelle.alsHeld())
+		&& !Heldtyp.KREUZRITTERPALADININ.equals(quelle.alsHeld())){
+				return false;
+		}
+		if(quelle.alsHeld().isUltimativeEingesetzt()) return false;
+		return ziel == null;
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		Wuerfel wuerfel = new Wuerfel(true);
+		if(Heldtyp.ARKANTERSCHWERTMEISTERKAMPFMAGIER.equals(quelle.alsHeld())){
+			wuerfel.setWeisseWuerfelseite(WeisseWuerfelseite.ZAUBERER);
+		}
+		if(Heldtyp.KREUZRITTERPALADININ.equals(quelle.alsHeld())){
+			wuerfel.setWeisseWuerfelseite(WeisseWuerfelseite.PRIESTER);
+		}
+
+		masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon().add(wuerfel);
+		masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().setUltimativeEingesetzt(true);
+	}
+
+}

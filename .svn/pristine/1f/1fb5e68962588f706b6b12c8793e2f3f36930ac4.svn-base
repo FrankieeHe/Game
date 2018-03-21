@@ -1,0 +1,18 @@
+package model;
+
+/**Das Spielertyp-Enum dient der Unterscheidung verschiedener Typen von Spielern. Besonders wichtig
+ * ist dies für die Unterscheidung zwischen menschlichen und KI-Spielern. Aber auch die verschiednen
+ * KI-Strategien werden darüber unterschieden.
+ * @author Rahel
+ *
+ */
+public enum Spielertyp {
+
+	MENSCHLICH,
+
+	RISIKOFREUDIG,
+
+	AUSGEGLICHEN,
+
+	VORSICHTIG;
+}

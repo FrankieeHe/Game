@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.heldenkartenWaehlen.HeldenkartenWaehlenController">
+   <children>
+      <Text fx:id="spieler1Text" fill="WHITE" layoutX="207.0" layoutY="252.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Spieler 1" />
+      <Text fx:id="spieler2Text" fill="WHITE" layoutX="207.0" layoutY="328.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Spieler 2" />
+      <Text fx:id="spieler3Text" fill="WHITE" layoutX="207.0" layoutY="401.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Spieler 3" />
+      <Text fx:id="spieler4Text" fill="WHITE" layoutX="207.0" layoutY="478.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Spieler 4" />
+      <ChoiceBox fx:id="spieler1Box" layoutX="200.0" layoutY="262.0" prefWidth="150.0" />
+      <ChoiceBox fx:id="spieler2Box" layoutX="200.0" layoutY="342.0" prefWidth="150.0" />
+      <ChoiceBox fx:id="spieler3Box" layoutX="200.0" layoutY="415.0" prefWidth="150.0" />
+      <ChoiceBox fx:id="spieler4Box" layoutX="200.0" layoutY="492.0" prefWidth="150.0" />
+      <Button fx:id="abbrechenButton" layoutX="200.0" layoutY="566.0" mnemonicParsing="false" onAction="#abbrechen" text="Abbrechen" />
+      <Button fx:id="oKButton" layoutX="894.0" layoutY="566.0" mnemonicParsing="false" onAction="#ok" text="Spiel starten!" />
+      <Text fill="WHITE" layoutX="527.0" layoutY="236.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Heldenkarten wählen" />
+      <CheckBox fx:id="zufaelligBox" layoutX="544.0" layoutY="570.0" mnemonicParsing="false" onAction="#zufaelligGewaehlt" text="zufällig zuteilen" textFill="WHITE" />
+   </children>
+</AnchorPane>

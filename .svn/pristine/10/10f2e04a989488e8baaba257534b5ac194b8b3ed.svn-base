@@ -1,0 +1,217 @@
+/**
+ * 
+ */
+package control.regeln;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import model.Abenteuer;
+import model.DungeonRoll;
+import model.Held;
+import model.Heldtyp;
+import model.Phase;
+import model.Quelle;
+import model.SchwarzeWuerfelseite;
+import model.Spieler;
+import model.Spielzustand;
+import model.Wuerfel;
+import model.Ziel;
+import control.MasterController;
+import control.regeln.MonsterPhasenRegel;
+import model.WeisseWuerfelseite;
+
+/**
+ * @author sopr102
+ *
+ */
+public class MonsterPhasenRegelTest {
+	private List<Quelle> Dungeonquelle;
+	private List<List<Ziel>> Ziels;
+	private List<Ziel> spruchrolleziel;
+	private Spieler[] sp;
+	private Wuerfel quelle;
+	private Quelle[] helds;
+	private MasterController mc;
+
+	/**
+	 * @throws java.lang.Exception
+	 */
+	@Before
+	public void setUp() throws Exception {
+		mc = new MasterController();
+		mc.setDungeonRoll(new DungeonRoll());
+		mc.getDungeonRoll().setAktuellerZustand(new Spielzustand());
+		mc.getDungeonRoll().getAktuellerZustand().setMaxRunde(Integer.MAX_VALUE);
+		mc.getDungeonRoll().getAktuellerZustand().setRunde(1);
+		Abenteuer abenteuer = new Abenteuer();
+		abenteuer.setLevel(1);
+		abenteuer.setPhase(Phase.KAMPFPHASE);
+		mc.getDungeonRoll().getAktuellerZustand().setAbenteuer(abenteuer);
+		sp = new Spieler[4];
+		Arrays.fill(sp, new Spieler());
+		mc.getDungeonRoll().getAktuellerZustand().setSpieler(Arrays.asList(sp));
+		mc.getDungeonRoll().getAktuellerZustand().setSpielerIndex(0);
+ 
+		Quelle dieb = new Wuerfel(true);
+		dieb.alsWuerfel().setWeisseWuerfelseite(WeisseWuerfelseite.DIEB);
+		 
+		Quelle champion = new Wuerfel(true);
+		champion.alsWuerfel().setWeisseWuerfelseite(WeisseWuerfelseite.CHAMPION);
+
+		Quelle krieger = new Wuerfel(true);
+		krieger.alsWuerfel().setWeisseWuerfelseite(WeisseWuerfelseite.KRIEGER);
+		Quelle priester = new Wuerfel(true);
+		priester.alsWuerfel().setWeisseWuerfelseite(WeisseWuerfelseite.PRIESTER);
+		Quelle spruchrolle = new Wuerfel(true);
+		spruchrolle.alsWuerfel().setWeisseWuerfelseite(WeisseWuerfelseite.SPRUCHROLLE);
+		Quelle zauberer = new Wuerfel(true);
+		zauberer.alsWuerfel().setWeisseWuerfelseite(WeisseWuerfelseite.ZAUBERER);
+
+		Quelle adptin = new Held();
+		adptin.alsHeld().setLevelUp(false);
+		adptin.alsHeld().setHeldtyp(Heldtyp.ADEPTINHEXE);
+
+		Quelle arkanter = new Held();
+		arkanter.alsHeld().setLevelUp(false);
+		arkanter.alsHeld().setHeldtyp(Heldtyp.ARKANTERSCHWERTMEISTERKAMPFMAGIER);
+
+		Quelle hauptling = new Held();
+		hauptling.alsHeld().setLevelUp(false);
+		hauptling.alsHeld().setHeldtyp(Heldtyp.HALBKOBOLDHAEUPTLING);
+
+		Quelle paladin = new Held();
+		paladin.alsHeld().setLevelUp(false);
+		paladin.alsHeld().setHeldtyp(Heldtyp.KREUZRITTERPALADININ);
+
+		Quelle barde = new Held();
+		barde.alsHeld().setLevelUp(true);
+		barde.alsHeld().setHeldtyp(Heldtyp.MINNESAENGERBARDE);
+
+		Quelle okkultistin = new Held();
+		okkultistin.alsHeld().setLevelUp(false);
+		okkultistin.alsHeld().setHeldtyp(Heldtyp.OKKULTISTINTOTENBESCHWOERERIN);
+
+		Quelle toetezielsr = new Held();
+		toetezielsr.alsHeld().setLevelUp(false);
+		toetezielsr.alsHeld().setHeldtyp(Heldtyp.RITTERDRACHENTOETER);
+
+		Quelle soeldner = new Held();
+		soeldner.alsHeld().setLevelUp(false);
+		soeldner.alsHeld().setHeldtyp(Heldtyp.SOELDNERKOMMANDANT);
+
+		Ziel[] kobolds = new Ziel[7];
+		Ziel[] schleims = new Ziel[7];
+		Ziel[] skeletts = new Ziel[7];
+		Ziel[] tranks = new Ziel[7];
+		Ziel[] truhes = new Ziel[7];
+		Ziel[] brademisch = new Ziel[7];
+		Ziel[] soldnmisch = new Ziel[7];
+
+		Ziel kobold = new Wuerfel(false);
+		kobold.alsWuerfel().setSchwarzeWuerfelseite(SchwarzeWuerfelseite.KOBOLD);
+		Ziel schleim = new Wuerfel(false);
+		schleim.alsWuerfel().setSchwarzeWuerfelseite(SchwarzeWuerfelseite.SCHLEIMWESEN);
+		Ziel skelett = new Wuerfel(false);
+		skelett.alsWuerfel().setSchwarzeWuerfelseite(SchwarzeWuerfelseite.SKELETT);
+		Ziel trank = new Wuerfel(false);
+		trank.alsWuerfel().setSchwarzeWuerfelseite(SchwarzeWuerfelseite.TRANK);
+		Ziel truhe = new Wuerfel(false);
+		truhe.alsWuerfel().setSchwarzeWuerfelseite(SchwarzeWuerfelseite.TRUHE);
+
+		Arrays.fill(kobolds, kobold);
+		Arrays.fill(schleims, schleim);
+		Arrays.fill(skeletts, skelett);
+		Arrays.fill(tranks, trank);
+		Arrays.fill(truhes, truhe);
+
+		Arrays.fill(soldnmisch, kobold);
+		soldnmisch[6] = schleim;
+		Arrays.fill(brademisch,schleim);
+		brademisch[6] = skelett;
+ 
+		Dungeonquelle = new ArrayList<Quelle>() {
+			{
+				add(dieb);
+				add(champion);
+				add(krieger);
+				add(zauberer);
+				add(priester);
+				add(spruchrolle);
+
+			}
+		};
+
+		Ziels = new ArrayList<List<Ziel>>() {
+			{
+				add(Arrays.asList(kobolds));
+				add(Arrays.asList(schleims));
+				add(Arrays.asList(skeletts));
+				add(Arrays.asList(tranks));
+				add(Arrays.asList(truhes));
+				add(Arrays.asList(soldnmisch));
+				add(Arrays.asList(brademisch));
+			}
+
+		};
+
+		helds = new Quelle[] { arkanter, hauptling, paladin, barde, okkultistin, toetezielsr, soeldner };
+		System.out.println("set up fetig!");
+
+	}
+
+	@Test
+	public void testpruefeAuswahlErlaubt() {
+		Iterator<Quelle> q = Dungeonquelle.iterator();
+		Iterator<List<Ziel>> z = Ziels.iterator();
+
+		for(Quelle quelle : Dungeonquelle) { 
+			for(List<Ziel> ziel : Ziels){
+				
+				for (Quelle h : helds) {
+
+					try {
+						mc.getDungeonRoll().getAktuellerZustand().getAbenteuer().setDrachen(new ArrayList<Wuerfel>());
+						mc.getDungeonRoll().getAktuellerZustand().getAbenteuer().setGefaehrten(new ArrayList<Wuerfel>(){{
+							add(quelle.alsWuerfel());
+							}});
+
+						mc.getDungeonRoll().getAktuellerZustand().getAbenteuer().setDungeon(new ArrayList<Wuerfel>(){{
+							for(Ziel z: ziel) {
+								add(z.alsWuerfel());
+							}
+							}});
+
+						mc.getDungeonRoll().getAktuellerZustand().getAbenteuer().setFriedhof(new ArrayList<Wuerfel>());
+
+						mc.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().setHeld(h.alsHeld());
+						MonsterPhasenRegel mpr = new MonsterPhasenRegel();
+						mpr.setMasterController(mc); 
+
+
+						assertTrue(mpr.pruefeAuswahlErlaubt(quelle, ziel)); 
+
+					} catch (AssertionError er) {
+						System.out.println(quelle.alsWuerfel().getWeisseWuerfelseite().toString() + " passt nicht zu :"
+								+ ziel.get(0).alsWuerfel().getSchwarzeWuerfelseite().toString()
+								+ " and "+ziel.get(6).alsWuerfel().getSchwarzeWuerfelseite().toString()+ " als den Held " + h.alsHeld().getHeldtyp().toString());
+
+					}
+				}
+			}
+		}
+	}
+
+	@Test
+	public void testregelAusfuehren() {
+
+	}
+
+}

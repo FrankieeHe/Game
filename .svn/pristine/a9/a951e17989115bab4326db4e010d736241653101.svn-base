@@ -1,0 +1,22 @@
+package model;
+
+/**
+ * Diese Klasse bietet eine Abstraktion für die Würfelseiten der Gefährtenwürfel.<br>
+ * Jede Konstante entspricht einer Würfelseite. 
+ * @author Pascal
+ *
+ */
+public enum WeisseWuerfelseite {
+
+	CHAMPION,
+
+	KRIEGER,
+
+	PRIESTER,
+
+	ZAUBERER,
+
+	DIEB,
+
+	SPRUCHROLLE;
+}

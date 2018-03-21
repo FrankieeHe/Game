@@ -1,0 +1,53 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Held;
+import model.Heldtyp;
+import model.Quelle;
+import model.Spielzustand;
+import model.Ziel;
+
+public class KampfmagierRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		// TODO Auto-generated method stub
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		if(quelle.alsHeld() == null) {
+			return false;
+		}
+		Held held = quelle.alsHeld();
+		if(held.getHeldtyp() != Heldtyp.ARKANTERSCHWERTMEISTERKAMPFMAGIER || !held.isLevelUp() || held.isUltimativeEingesetzt())  {
+			return false;
+		}else {
+			return true;
+		}
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		// Spielzustand klonen & aktualisieren
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand().neuenSpielzustandErzeugen();
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+		
+		// UF als genutzt setzen
+		masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld().setUltimativeEingesetzt(true);
+		
+		// Listen leeren
+		masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDrachen().clear();
+		masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten().clear();
+		masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon().clear();
+		masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getFriedhof().clear();
+		
+		//naechstes Level starten
+		masterController.getAbenteuerController().naechstesLevel();
+	}
+
+}

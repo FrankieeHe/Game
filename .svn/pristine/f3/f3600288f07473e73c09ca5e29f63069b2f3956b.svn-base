@@ -1,0 +1,95 @@
+package control.regeln;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Held;
+import model.Heldtyp;
+import model.Quelle;
+import model.Schatz;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+public class DrachenkampfRegel extends RegelController {
+	
+	@Override
+	public void setMasterController(MasterController masterController) {
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		List<Wuerfel> zielWuerfel = new ArrayList<Wuerfel>();
+		if (quelle != null || ziel == null){
+			System.out.println("Drachenphase falsche Quelle/Ziel");
+			return false;
+		}	
+		// Ziele als Wuerfelliste
+		for (Ziel aktuellesZiel : ziel) {
+			// aktuelles Ziel muss Wuerfel sein
+			if (aktuellesZiel.alsWuerfel() == null) {
+				return false;
+			} else {
+				// aktuelles Ziel muss weiﬂer Wuerfel sein
+				if (!aktuellesZiel.alsWuerfel().isWeiss()) {
+					return false;
+				} else { // ZielWuerfel zur Wuerfelliste hinzufuegen
+					zielWuerfel.add(aktuellesZiel.alsWuerfel());
+				}
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		Held held = this.masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld();
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand().neuenSpielzustandErzeugen();
+		List<Wuerfel> gefaehrten = geklonterZustand.getAbenteuer().getGefaehrten();
+		boolean besiegt = false;
+		masterController.spielzustandSetzen(geklonterZustand);
+		int neededGef;
+		int aktGef = 0;
+		boolean [] gef = new boolean[5];
+		if (held.getHeldtyp().equals(Heldtyp.RITTERDRACHENTOETER))
+			neededGef = 2;
+		else
+			neededGef = 3;
+		
+		for(Wuerfel w : gefaehrten){
+			if (w.getWeisseWuerfelseite().equals(WeisseWuerfelseite.CHAMPION))
+				gef[0] = true;
+			if (w.getWeisseWuerfelseite().equals(WeisseWuerfelseite.KRIEGER))
+				gef[1] = true;
+			if (w.getWeisseWuerfelseite().equals(WeisseWuerfelseite.PRIESTER))
+				gef[2] = true;
+			if (w.getWeisseWuerfelseite().equals(WeisseWuerfelseite.ZAUBERER))
+				gef[3] = true;
+			if (w.getWeisseWuerfelseite().equals(WeisseWuerfelseite.DIEB))
+				gef[4] = true;
+		}	
+		for (boolean b : gef){
+			if(b)
+				aktGef++;
+		}		
+		if (aktGef >= neededGef)
+			besiegt = true;
+		
+		if(besiegt){
+			List<Schatz> neueSchaetze = geklonterZustand.aktuellerSpieler().getSpielerWerte().getSchaetze();
+			neueSchaetze.add(masterController.getSchatzController().schatzZiehen());
+			geklonterZustand.aktuellerSpieler().getSpielerWerte().setSchaetze(neueSchaetze);
+			int exp = geklonterZustand.aktuellerSpieler().getSpielerWerte().getErfahrungspunkte()+1;
+			geklonterZustand.aktuellerSpieler().getSpielerWerte().setErfahrungspunkte(exp);
+			masterController.getAbenteuerController().phaseWechseln();
+		}
+		else{
+			masterController.getAbenteuerController().abenteuerBeenden();
+		}
+	}
+
+}

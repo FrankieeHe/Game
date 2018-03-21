@@ -1,0 +1,144 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Held;
+import model.Heldtyp;
+import model.Phase;
+import model.Quelle;
+import model.Ziel;
+import model.Schatz;
+import model.Wuerfel;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+
+public class TrankRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		//falls allgemein mit der Möglichkeit quelle = null gerechnet werden muss, so muss dieser Fall noch abgefangen werden!
+		boolean quelleok = false;
+		boolean phaseok = false;
+		boolean zieleok = false;
+		if(quelle.alsSchatz() != null){
+			if(Schatz.TRANK.equals(quelle.alsSchatz())){
+				quelleok = true;
+				//bei Trank-Schätzen ist das Einsetzen unabhängig von der Phase erlaubt
+				phaseok = true;
+				List<Wuerfel> friedhof = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getFriedhof();
+				zieleok = ziel.size() == 1 && ziel.get(0).alsWuerfel() != null && friedhof.contains(ziel.get(0).alsWuerfel());
+			}
+			else if(Schatz.SPRUCHROLLE.equals(quelle.alsSchatz())){
+				quelleok = true;
+				Phase phase = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getPhase();
+				Held held = masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld();
+				if((Heldtyp.HALBKOBOLDHAEUPTLING.equals(held.getHeldtyp()) && Phase.KAMPFPHASE.equals(phase)) || Phase.PLUENDERPHASE.equals(phase)){
+					phaseok = true;
+				}
+			}			
+		}
+		else if(quelle.alsHeld()!= null){
+			Held held = quelle.alsHeld();
+			if(!held.isUltimativeEingesetzt()){
+				if((Heldtyp.KREUZRITTERPALADININ.equals(held.getHeldtyp()) || Heldtyp.ARKANTERSCHWERTMEISTERKAMPFMAGIER.equals(held.getHeldtyp())) && !held.isLevelUp()){
+					quelleok = true;
+				}
+				Phase phase = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getPhase();
+				//Helden können als Gefährte eingesetzt werden um Tränke zu trinken, aber deshalb können sie trotzdem nicht außerhalb der Plünderphase Tränke einsetzen
+				if(Phase.PLUENDERPHASE.equals(phase)){
+					phaseok = true;
+				}
+			}			
+		}
+		else if(quelle.alsWuerfel() != null ){
+			Wuerfel quellWuerfel = quelle.alsWuerfel();
+			Held held = masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld();
+			Phase phase = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getPhase();
+			List<Wuerfel> gefaehrten = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten();
+			if((Heldtyp.HALBKOBOLDHAEUPTLING.equals(held.getHeldtyp()) && Phase.KAMPFPHASE.equals(phase)) || Phase.PLUENDERPHASE.equals(phase)){
+				phaseok = true;
+			}
+			if(quellWuerfel.isWeiss() && gefaehrten.contains(quellWuerfel)){
+				quelleok = true;
+			}
+		}
+		
+		//wenn die Quelle kein Schatz-Trank war
+		if(!zieleok){
+			
+			if(!ziel.isEmpty()){
+				zieleok = true;
+				List<Wuerfel> friedhof = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getFriedhof();
+				List<Wuerfel> dungeon = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon();
+				
+				//alle Ziele m�ssen W�rfel sein und falls sie nicht die Quelle sind m�ssen sie auf dem Friedhof liegen
+				for( Ziel aktuellesZiel : ziel){
+					Wuerfel zielWuerfel = aktuellesZiel.alsWuerfel();		
+					//hier ist wirklich der vergleich auf exakte instanz gemeint!
+					if(zielWuerfel == null || (zielWuerfel != (quelle.alsWuerfel()) && !friedhof.contains(zielWuerfel))){
+						zieleok = false;
+						break;
+					}
+				}
+				
+				//Tr�nke z�hlen
+				int anzahlTraenke = 0;
+				for( Wuerfel wuerfel : dungeon){
+					if(SchwarzeWuerfelseite.TRANK.equals(wuerfel.getSchwarzeWuerfelseite())){
+						anzahlTraenke++;
+					}
+				}
+				
+				//es k�nnen nicht mehr Gef�hrten wiederbelebt werden als Tr�nke vorhanden sind
+				if(ziel.size() > anzahlTraenke){
+					zieleok = false;
+				}
+			}
+			
+		}
+		return quelleok && phaseok && zieleok;
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand().neuenSpielzustandErzeugen();
+		masterController.spielzustandSetzen(geklonterZustand);
+		List<Wuerfel> gefaehrten = geklonterZustand.getAbenteuer().getGefaehrten();
+		List<Wuerfel> friedhof = geklonterZustand.getAbenteuer().getFriedhof();
+		
+		if(quelle.alsSchatz() != null){
+			masterController.getSchatzController().schatzZuruecklegen(quelle.alsSchatz());
+		}
+		else if(quelle.alsHeld()!= null){
+			quelle.alsHeld().setUltimativeEingesetzt(true);
+		}
+		else{
+			//Opfern
+			gefaehrten.remove(quelle.alsWuerfel());
+			friedhof.add(quelle.alsWuerfel());
+		}
+		
+		//Wiederbeleben
+		Wuerfel trankwuerfel = new Wuerfel(false);
+		masterController.getWuerfelController().wuerfelseiteErsetzen(trankwuerfel, SchwarzeWuerfelseite.TRANK);
+		for(Ziel aktuellesZiel : ziel){
+			friedhof.remove(aktuellesZiel.alsWuerfel());
+			gefaehrten.add(aktuellesZiel.alsWuerfel());			
+			if(quelle.alsSchatz() == null){
+				geklonterZustand.getAbenteuer().getDungeon().remove(trankwuerfel);
+			}
+		}
+		
+		if(geklonterZustand.getAbenteuer().getDungeon().isEmpty()){
+			masterController.getAbenteuerController().phaseWechseln();
+		}		
+	}
+
+}

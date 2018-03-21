@@ -1,0 +1,85 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Held;
+import model.Heldtyp;
+import model.Quelle;
+import model.SchwarzeWuerfelseite;
+import model.Spielzustand;
+import model.WeisseWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+
+public class HalbkoboldHaeuptlingRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) { 
+		if(quelle.alsHeld() == null) {
+			return false;
+		}
+		Held held = quelle.alsHeld();
+		if (held.getHeldtyp() != Heldtyp.HALBKOBOLDHAEUPTLING) {
+			return false;
+		}
+		if (held.isUltimativeEingesetzt()) {
+			return false;
+		}
+		
+		// UF Stufe 1 ist nur 1 Kobold gegen Dieb tauschen
+		if (ziel.size() == 1 && !held.isLevelUp()) {
+			if (ziel.get(0).alsWuerfel() != null) {
+				Wuerfel wuerfel = ziel.get(0).alsWuerfel();
+				if (!wuerfel.isWeiss()) {
+					return (wuerfel.getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.KOBOLD);
+				}
+			}
+		} else // UF Stufe 2 ist 2 Kobolde gegen 2 Diebe tauschen
+		if (ziel.size() == 2) {
+			if (ziel.get(0).alsWuerfel() != null && ziel.get(1).alsWuerfel() != null) {
+				Wuerfel wuerfel_1 = ziel.get(0).alsWuerfel();
+				Wuerfel wuerfel_2 = ziel.get(1).alsWuerfel();
+				if (!wuerfel_1.isWeiss() && !wuerfel_2.isWeiss()) {
+					return wuerfel_1.getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.KOBOLD
+							&& wuerfel_2.getSchwarzeWuerfelseite() == SchwarzeWuerfelseite.KOBOLD;
+				}
+			}
+		}
+		System.out.println("HK funktioniert nicht");
+		return false;
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		// Spielzustaend kopieren und aktualisieren
+		Spielzustand geklonterZustand = masterController.getDungeonRoll().getAktuellerZustand()
+				.neuenSpielzustandErzeugen();
+		masterController.getDungeonRoll().setAktuellerZustand(geklonterZustand);
+
+		// UF auf genutzt setzen
+		masterController.getDungeonRoll().getAktuellerZustand().aktuellerSpieler().getHeld()
+				.setUltimativeEingesetzt(true);
+		
+		// Temporaere Gefaehrten Wuerfel erstellen
+		List<Wuerfel> monster = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon();
+		List<Wuerfel> gefaehrten = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten();
+		for(Ziel aktuellesZiel : ziel) {
+			Wuerfel wuerfel = new Wuerfel(true);
+			wuerfel.setTemporaer(true);
+			wuerfel.setWeisseWuerfelseite(WeisseWuerfelseite.DIEB);
+			monster.remove(aktuellesZiel.alsWuerfel());
+			gefaehrten.add(wuerfel);
+		}
+		
+		masterController.getAbenteuerController().phaseWechseln();
+
+	}
+
+}

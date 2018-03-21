@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane id="pane" fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1280.0" prefWidth="1020.0" styleClass="startbildschirmPane" stylesheets="@../spielfeld/stylesheet.css" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.startbildschirm.StartbildschirmController">
+   <children>
+      <Button fx:id="neuesSpielButton" layoutX="527.0" layoutY="342.0" mnemonicParsing="false" onAction="#neuesSpiel" prefWidth="150.0" text="Neues Spiel starten" />
+      <Button fx:id="spielstandLadenButton" layoutX="527.0" layoutY="368.0" mnemonicParsing="false" onAction="#spielstandLaden" prefHeight="26.0" prefWidth="150.0" text="Spielstand laden" />
+      <Button fx:id="highscoresButton" layoutX="527.0" layoutY="394.0" mnemonicParsing="false" onAction="#highscoresAnzeigen" prefHeight="26.0" prefWidth="150.0" text="Highscores" />
+      <Button fx:id="anleitungButton" layoutX="527.0" layoutY="471.0" mnemonicParsing="false" onAction="#anleitungAnzeigen" prefHeight="26.0" prefWidth="150.0" text="Anleitung" />
+      <Button fx:id="fortsetzenButton" layoutX="527.0" layoutY="421.0" mnemonicParsing="false" onAction="#fortsetzen" prefHeight="26.0" prefWidth="150.0" text="Spiel fortsetzen" />
+      <Button fx:id="beendenButton" layoutX="527.0" layoutY="447.0" mnemonicParsing="false" onAction="#beenden" prefHeight="26.0" prefWidth="150.0" text="Programm beenden" />
+   </children>
+</AnchorPane>

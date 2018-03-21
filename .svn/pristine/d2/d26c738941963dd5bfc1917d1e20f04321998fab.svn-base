@@ -1,0 +1,141 @@
+package model;
+
+import java.util.Random;
+
+public class Wuerfel implements Quelle, Ziel {
+
+	private boolean temporaer;
+
+	private SchwarzeWuerfelseite schwarzeWuerfelseite;
+	
+	private WeisseWuerfelseite weisseWuerfelseite;
+
+	// Speichert die Information über die Farbe des Wurfel
+	private boolean isWeiss;
+	
+	/**
+	 * Erstellt den Wurfel und setzt isWeiss true an, falls im
+	 * "farbe" war true übergegeben. Anderesfalls wird im isWeiss
+	 * false gespeicher 
+	 * @param seite - falls true, dann weisse Seite, andersfalls wird der Wurfel schwarz
+	 */
+	
+	public Wuerfel(boolean farbe){	
+		if(farbe) {
+			isWeiss = true;			
+		} else {
+			isWeiss = false;
+		}
+	}
+	
+	/**
+	 * Gibt den Wert von isWeiss zurück
+	 * @return isWeiss
+	 */
+	public boolean isWeiss() {
+		return isWeiss;
+	}
+	
+	/**
+	 * Gibt schwarzeWuerfelseite zurück
+	 * @return schwarzeWuerfelseite
+	 */
+	public SchwarzeWuerfelseite getSchwarzeWuerfelseite() {
+		return schwarzeWuerfelseite;
+	}
+	
+	/**
+	 * Setzt schwarzeWuerfelseite an, falls der Wurfel schwarz ist. 
+	 * Anderenfalls schreibt, dass Wurfel weiss ist
+	 * @param neuSeite - neue schwarzeSeite
+	 */
+	public void setSchwarzeWuerfelseite(SchwarzeWuerfelseite neuSeite) {
+		if(!this.isWeiss){
+			this.schwarzeWuerfelseite = neuSeite;
+		} else {
+			System.out.println("Der Wurfel is weiss");
+		}		
+	}
+		
+	/**
+	 * Gibt weisseWuerfelseite zurück
+	 * @return weisseWuerfelseite
+	 */
+	public WeisseWuerfelseite getWeisseWuerfelseite() {
+		return weisseWuerfelseite;
+	}
+	
+	/**
+	 * Setzt weisseWuerfelseite an, falls der Wurfel weiss ist. 
+	 * Anderenfalls schreibt, dass Wurfel schwarz ist
+	 * @param neuSeite - neue weisseSeite
+	 */
+	public void setWeisseWuerfelseite(WeisseWuerfelseite neuSeite) {
+		if(this.isWeiss){
+			this.weisseWuerfelseite = neuSeite;
+		} else {
+			System.out.println("Der Wurfel is weiss");
+		}
+	}
+		
+	/**
+	 * Setzt temporaer an temp an
+	 * @param temp - neue temporaer Wert 
+	 */
+	public void setTemporaer(boolean temp) {
+		this.temporaer = temp;
+	}
+	
+	/**
+	 * Gibt den Wert des temporaer zurrück
+	 * @return temporaer
+	 */
+	public boolean getTemporaer() {
+		return this.temporaer;
+	}	
+	
+	/**
+	 * @see model.Quelle#alsWuerfel()
+	 */
+	public Wuerfel alsWuerfel() {
+		return this;
+	}
+
+	/**
+	 * @see model.Quelle#alsHeld()
+	 */
+	public Held alsHeld() {
+		return null;
+	}
+
+	/**
+	 * @see model.Quelle#alsSchatz()
+	 */
+	public Schatz alsSchatz() {
+		return null;
+	}
+	
+	/** Wurfelt den Wurfel.
+	 * Falls der Wurfel weiss ist, dann wird ihm eine zufällige
+	 * enum-Wert aus WeisseWuerfelseite gegeben. Anderesfall aus
+	 * SchwarzeWuerfelseite.
+	 */
+	public void wuerfeln() {
+        Random randGen = new Random();
+        int wert = randGen.nextInt(6);
+        
+        if(this.isWeiss){
+        	weisseWuerfelseite = WeisseWuerfelseite.values()[wert];        	
+        } else {
+        	schwarzeWuerfelseite = SchwarzeWuerfelseite.values()[wert];
+        } 
+	}
+	
+	public boolean isMonster() {
+		if(isWeiss) return false;
+		return schwarzeWuerfelseite == SchwarzeWuerfelseite.KOBOLD || 
+			   schwarzeWuerfelseite == SchwarzeWuerfelseite.SCHLEIMWESEN ||
+			   schwarzeWuerfelseite == SchwarzeWuerfelseite.SKELETT;
+	}
+
+}

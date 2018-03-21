@@ -1,0 +1,41 @@
+package model;
+
+import java.io.Serializable;
+import java.util.List;
+
+
+/**Die Klasse DungeonRoll ist der zentrale Zugriffspunkt auf das Model, in ihr wird der aktuelle
+ * Spielzustand verwaltet, sowie die Liste der Highscore-Eintr�ge.
+ * @author Rahel
+ * 
+ */
+public class DungeonRoll implements Serializable{
+	
+	/**
+	 * Der aktuelle Spielzustand des momentan aktiven Spiels, sofern ein Spiel aktiv ist.
+	 */
+	private Spielzustand aktuellerZustand;
+
+	/**
+	 * Die Highscore-Liste, die Eintr�ge sind �ber alle bisher gespielten Spiele gesammelt.
+	 * Es werden maximal 10 Eintr�ge gespeichert.
+	 */
+	private List<HighscoreEintrag> highscore;
+	
+	public Spielzustand getAktuellerZustand() {
+		return aktuellerZustand;
+	}
+
+	public void setAktuellerZustand(Spielzustand aktuellerZustand) {
+		this.aktuellerZustand = aktuellerZustand;
+	}
+
+	public List<HighscoreEintrag> getHighscore() {
+		return highscore;
+	}
+
+	public void setHighscore(List<HighscoreEintrag> highscoreEintrag) {
+		this.highscore = highscoreEintrag;
+	}
+
+}

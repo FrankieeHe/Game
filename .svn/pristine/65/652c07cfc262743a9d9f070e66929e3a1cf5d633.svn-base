@@ -1,0 +1,360 @@
+package gui.heldenkartenWaehlen;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+
+import control.MasterController;
+import gui.spielfeld.SpielfeldController;
+import gui.startbildschirm.StartbildschirmController;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Region;
+import javafx.scene.text.Text;
+import model.Held;
+import model.Heldtyp;
+import model.KI;
+import model.Spieler;
+import model.SpielerWerte;
+import model.Spielertyp;
+
+public class HeldenkartenWaehlenController {
+
+	MasterController masterController;
+
+	@FXML
+	private Text spieler1Text;
+
+	@FXML
+	private Text spieler2Text;
+
+	@FXML
+	private Text spieler3Text;
+
+	@FXML
+	private Text spieler4Text;
+
+	@FXML
+	private ChoiceBox<String> spieler1Box;
+
+	@FXML
+	private ChoiceBox<String> spieler2Box;
+
+	@FXML
+	private ChoiceBox<String> spieler3Box;
+
+	@FXML
+	private ChoiceBox<String> spieler4Box;
+
+	@FXML
+	private CheckBox zufaelligBox;
+
+	@FXML
+	private Button abbrechenButton;
+
+	@FXML
+	private Button oKButton;
+
+	@FXML
+	private AnchorPane pane;
+
+	private int rundenzahl;
+
+	@FXML
+	public void initialize() {
+		ObservableList<String> list = FXCollections.observableArrayList("Kreuzritterin\nPaladinin",
+				"Minnesänger\nBarde", "Ritter\nDrachentöter", "Söldner\nKommandant", "Halbkobold\nHäuptling",
+				"Arkanerschwertmeister\nKampfmagier", "Adeptin\nHexe", "Okkultistin\nTotenbeschwörerin");
+		spieler1Box.setItems(list);
+		spieler2Box.setItems(list);
+		spieler3Box.setItems(list);
+		spieler4Box.setItems(list);
+	}
+
+	public void setRundenzahl(int rundenzahl) {
+		this.rundenzahl = rundenzahl;
+	}
+
+	public void setSpielernamen(List<String> namen) {
+		switch (namen.size()) {
+		case 1:
+			spieler1Text.setText(namen.get(0));
+			spieler2Text.setVisible(false);
+			spieler3Text.setVisible(false);
+			spieler4Text.setVisible(false);
+			spieler2Box.setVisible(false);
+			spieler3Box.setVisible(false);
+			spieler4Box.setVisible(false);
+			break;
+		case 2:
+			spieler1Text.setText(namen.get(0));
+			spieler2Text.setText(namen.get(1));
+			spieler3Text.setVisible(false);
+			spieler4Text.setVisible(false);
+			spieler3Box.setVisible(false);
+			spieler4Box.setVisible(false);
+			break;
+
+		case 3:
+			spieler1Text.setText(namen.get(0));
+			spieler2Text.setText(namen.get(1));
+			spieler3Text.setText(namen.get(2));
+			spieler4Text.setVisible(false);
+			spieler4Box.setVisible(false);
+			break;
+		case 4:
+			spieler1Text.setText(namen.get(0));
+			spieler2Text.setText(namen.get(1));
+			spieler3Text.setText(namen.get(2));
+			spieler4Text.setText(namen.get(3));
+			break;
+		}
+	}
+
+	public void setMasterController(MasterController masterController) {
+		this.masterController = masterController;
+	}
+
+	@FXML
+	void abbrechen(ActionEvent event) {
+
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setTitle("Abbrechen");
+		alert.setHeaderText("Sie brechen die Konfiguration des neuen Spiels komplett ab.");
+		alert.setContentText("Möchten Sie die Konfiguration des neuen Spiels wirklich komplett abbrechen?");
+
+		Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == ButtonType.OK) {
+			FXMLLoader loader = new FXMLLoader();
+			try {
+				loader.setLocation(getClass().getResource("/gui/startbildschirm/Startbildschirm.fxml"));
+				Parent root = loader.load();
+
+				StartbildschirmController controller = loader.getController();
+				controller.setMasterController(masterController);
+
+				pane.getChildren().clear();
+				pane.getChildren().add(root);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@FXML
+	void ok(ActionEvent event) {
+		if (heldenDoppeltGewaehlt()) {
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Eingabefehler");
+			alert.setHeaderText("Sie haben eine Heldenkarte mindestens doppelt ausgewählt.");
+			alert.setContentText("Bitte wählen Sie keine Heldenkarten doppelt aus!");
+			alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+			alert.showAndWait();
+		} else if (nichtAlleKartenGewaehlt() && !zufaelligBox.isSelected()) {
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Eingabefehler");
+			alert.setHeaderText("Sie haben nicht für jeden Spieler eine Heldenkarte ausgewählt.");
+			alert.setContentText("Bitte wählen Sie für jeden Spieler eine Heldenkarten aus!");
+			alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+			alert.showAndWait();
+		} else
+			spielStarten();
+	}
+
+	@FXML
+	void zufaelligGewaehlt(ActionEvent event) {
+		if (zufaelligBox.isSelected()) {
+			spieler1Box.getSelectionModel().select(null);
+			spieler1Box.setDisable(true);
+			spieler2Box.getSelectionModel().select(null);
+			spieler2Box.setDisable(true);
+			spieler3Box.getSelectionModel().select(null);
+			spieler3Box.setDisable(true);
+			spieler4Box.getSelectionModel().select(null);
+			spieler4Box.setDisable(true);
+		} else {
+			spieler1Box.setDisable(false);
+			spieler2Box.setDisable(false);
+			spieler3Box.setDisable(false);
+			spieler4Box.setDisable(false);
+		}
+
+	}
+
+	public boolean heldenDoppeltGewaehlt() {
+		ArrayList<String> list = new ArrayList<String>();
+		if (spieler1Box.getValue() != null && !spieler1Box.getValue().equals(""))
+			list.add(spieler1Box.getValue());
+		if (spieler2Box.getValue() != null && !spieler2Box.getValue().equals(""))
+			list.add(spieler2Box.getValue());
+		if (spieler3Box.getValue() != null && !spieler3Box.getValue().equals(""))
+			list.add(spieler3Box.getValue());
+		if (spieler4Box.getValue() != null && !spieler4Box.getValue().equals(""))
+			list.add(spieler4Box.getValue());
+		for (int i = 0; i < list.size(); i++) {
+			for (int j = 0; j < list.size(); j++) {
+				if (i != j && list.get(i).equals(list.get(j))) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Erstellt die Liste mit den Spielern und ruft auf dem MasterController
+	 * {@code spielStarten auf}.
+	 */
+	private void spielStarten() {
+		if (zufaelligBox.isSelected()) {
+			Alert alert = new Alert(AlertType.CONFIRMATION);
+			alert.setTitle("Hinweis");
+			alert.setHeaderText("Die Heldenkarten werden zufällig zugeteilt.");
+			alert.setContentText("Möchten Sie fortfahren?");
+
+			Optional<ButtonType> result = alert.showAndWait();
+			if (result.get() == ButtonType.OK) {
+				ObservableList<String> list = FXCollections.observableArrayList("Kreuzritterin\nPaladinin",
+						"Minnesänger\nBarde", "Ritter\nDrachentöter", "Söldner\nKommandant", "Halbkobold\nHäuptling",
+						"Arkanerschwertmeister\nKampfmagier", "Adeptin\nHexe", "Okkultistin\nTotenbeschwörerin");
+				Random random = new Random();
+				String h = list.get(random.nextInt(list.size()));
+				spieler1Box.setValue(h);
+				list.remove(h);
+
+				h = list.get(random.nextInt(list.size()));
+				spieler2Box.setValue(h);
+				list.remove(h);
+
+				h = list.get(random.nextInt(list.size()));
+				spieler3Box.setValue(h);
+				list.remove(h);
+
+				h = list.get(random.nextInt(list.size()));
+				spieler4Box.setValue(h);
+				list.remove(h);
+			} else
+				return;
+		}
+		ArrayList<String> list1 = new ArrayList<String>();
+		if (spieler1Text.isVisible())
+			list1.add(spieler1Text.getText());
+		if (spieler2Text.isVisible())
+			list1.add(spieler2Text.getText());
+		if (spieler3Text.isVisible())
+			list1.add(spieler3Text.getText());
+		if (spieler4Text.isVisible())
+			list1.add(spieler4Text.getText());
+		ArrayList<Spieler> spielerList = new ArrayList<Spieler>();
+		for (int i = 0; i < list1.size(); i++) {
+			Spielertyp typ;
+			if (list1.get(i).equals("RISIKOFREUDIG"))
+				typ = Spielertyp.RISIKOFREUDIG;
+			else if (list1.get(i).equals("AUSGEGLICHEN"))
+				typ = Spielertyp.AUSGEGLICHEN;
+			else if (list1.get(i).equals("VORSICHTIG"))
+				typ = Spielertyp.VORSICHTIG;
+			else
+				typ = Spielertyp.MENSCHLICH;
+			
+			Spieler spieler;
+			switch(typ) {
+			case RISIKOFREUDIG:
+				spieler = new KI(KI.Strategy.BESTE_VALUE);
+				break;
+			case VORSICHTIG:
+				spieler = new KI(KI.Strategy.WENIG_RISIKO);
+				break;
+			case AUSGEGLICHEN:
+				spieler = new KI(KI.Strategy.RANDOM);
+				break;
+			default:
+				spieler = new Spieler();
+				break;
+			}
+			
+			spielerList.add(spieler);
+			spielerList.get(i).setName(list1.get(i));
+			spielerList.get(i).setSpielerWerte(new SpielerWerte());
+			spielerList.get(i).setSpielertyp(typ);
+			Held held = new Held();
+			if (i == 0) {
+				held.setHeldtyp(getHeld(spieler1Box.getValue()));
+				spielerList.get(i).setHeld(held);
+			}
+			if (i == 1) {
+				held.setHeldtyp(getHeld(spieler2Box.getValue()));
+				spielerList.get(i).setHeld(held);
+			}
+			if (i == 2) {
+				held.setHeldtyp(getHeld(spieler3Box.getValue()));
+				spielerList.get(i).setHeld(held);
+			}
+			if (i == 3) {
+				held.setHeldtyp(getHeld(spieler4Box.getValue()));
+				spielerList.get(i).setHeld(held);
+			}
+		}
+		System.out.println(spielerList.toString());
+		masterController.spielStarten(spielerList, rundenzahl);
+
+		FXMLLoader loader = new FXMLLoader();
+		try {
+			loader.setLocation(getClass().getResource("/gui/spielfeld/Spielfeld.fxml"));
+			Parent root = loader.load();
+
+			SpielfeldController controller = loader.getController();
+			controller.setMasterController(masterController);
+
+			pane.getChildren().clear();
+			pane.getChildren().add(root);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private Heldtyp getHeld(String heldname) {
+		if (heldname.equals("Kreuzritterin\nPaladinin"))
+			return Heldtyp.KREUZRITTERINPALADININ;
+		if (heldname.equals("Minnesänger\nBarde"))
+			return Heldtyp.MINNESAENGERBARDE;
+		if (heldname.equals("Ritter\nDrachentöter"))
+			return Heldtyp.RITTERDRACHENTOETER;
+		if (heldname.equals("Söldner\nKommandant"))
+			return Heldtyp.SOELDNERKOMMANDANT;
+		if (heldname.equals("Halbkobold\nHäuptling"))
+			return Heldtyp.HALBKOBOLDHAEUPTLING;
+		if (heldname.equals("Arkanerschwertmeister\nKampfmagier"))
+			return Heldtyp.ARKANERSCHWERTMEISTERKAMPFMAGIER;
+		if (heldname.equals("Adeptin\nHexe"))
+			return Heldtyp.ADEPTINHEXE;
+		if (heldname.equals("Okkultistin\nTotenbeschwörerin"))
+			return Heldtyp.OKKULTISTINTOTENBESCHWOERERIN;
+		return null;
+	}
+
+	private boolean nichtAlleKartenGewaehlt() {
+		if (spieler1Text.isVisible() && spieler1Box.getValue() == null)
+			return true;
+		if (spieler2Text.isVisible() && spieler2Box.getValue() == null)
+			return true;
+		if (spieler3Text.isVisible() && spieler3Box.getValue() == null)
+			return true;
+		if (spieler4Text.isVisible() && spieler4Box.getValue() == null)
+			return true;
+		return false;
+	}
+}

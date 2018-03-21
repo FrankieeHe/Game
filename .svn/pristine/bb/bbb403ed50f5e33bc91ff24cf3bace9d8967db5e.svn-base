@@ -1,0 +1,106 @@
+package model;
+
+import java.util.List;
+
+/**
+ * Das Abenteuer ist nach dem Abenteuer in den DungeonRoll Regeln benannt.<br>
+ * Es gibt an, wie das Spielfeld des Spielers, der momentan an der Reihe ist, aussieht.<br>
+ * Dazu gehört das aktuelle Level, die Würfel, die aktuelle Phase und die Spielerwerte.<br>
+ * Außerdem wird der aktuelle Spielzustand im Abenteuer gespeichert.
+ * @author Pascal
+ *
+ */
+public class Abenteuer {
+
+	/**
+	 * das aktuelle Level
+	 */
+	private int level;
+
+	/**
+	 * die aktuellen Monsterwürfel
+	 */
+	private List<Wuerfel> dungeon;
+
+	/**
+	 * Würfel in der Drachenhöhle
+	 */
+	private List<Wuerfel> drachen;
+
+	/**
+	 * Gefährtenwürfel, die bereits gespielt und nicht wiederbelebt wurden (und demnach auf dem Friedhof liegen)
+	 */
+	private List<Wuerfel> friedhof;
+	
+	/**
+	 * die noch lebenden Gefährten
+	 */
+	private List<Wuerfel> gefaehrten;
+
+	/**
+	 * die aktuelle Phase, in der sich das Abenteuer befindet
+	 */
+	private Phase phase;
+
+	/**
+	 * temporäre Spielerwerte, die dem Spieler NACH ERFOLGREICHEM Abschluss dieses Abenteuers zugewiesen werden
+	 */
+	private SpielerWerte spielerWerte;
+
+	public int getLevel() {
+		return level;
+	}
+
+	public void setLevel(int level) {
+		this.level = level;
+	}
+
+	public List<Wuerfel> getDungeon() {
+		return dungeon;
+	}
+
+	public void setDungeon(List<Wuerfel> dungeon) {
+		this.dungeon = dungeon;
+	}
+
+	public List<Wuerfel> getDrachen() {
+		return drachen;
+	}
+
+	public void setDrachen(List<Wuerfel> drachen) {
+		this.drachen = drachen;
+	}
+
+	public List<Wuerfel> getFriedhof() {
+		return friedhof;
+	}
+
+	public void setFriedhof(List<Wuerfel> friedhof) {
+		this.friedhof = friedhof;
+	}
+
+	public List<Wuerfel> getGefaehrten() {
+		return gefaehrten;
+	}
+
+	public void setGefaehrten(List<Wuerfel> gefaehrten) {
+		this.gefaehrten = gefaehrten;
+	}
+
+	public Phase getPhase() {
+		return phase;
+	}
+
+	public void setPhase(Phase phase) {
+		this.phase = phase;
+	}
+
+	public SpielerWerte getSpielerWerte() {
+		return spielerWerte;
+	}
+
+	public void setSpielerWerte(SpielerWerte spielerWerte) {
+		this.spielerWerte = spielerWerte;
+	}
+
+}

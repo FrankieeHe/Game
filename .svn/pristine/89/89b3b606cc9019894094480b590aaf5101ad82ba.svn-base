@@ -1,0 +1,19 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Wuerfel;
+
+public class DrachenkampfRegel extends RegelController {
+	
+	private MasterController master;
+	private List<Wuerfel> gefaehrten;
+	
+	public DrachenkampfRegel(MasterController pMaster){
+		master = pMaster;
+		gefaehrten = master.getDungeonRoll().getAktuellerZustand().getAbenteuer().getGefaehrten();
+	}
+
+}

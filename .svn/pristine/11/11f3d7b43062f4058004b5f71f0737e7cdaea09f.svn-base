@@ -1,0 +1,54 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.Quelle;
+import model.Schatz;
+import model.SchwarzeWuerfelseite;
+import model.Wuerfel;
+import model.Ziel;
+/**
+ * 
+ * Verwandelt alle Monster in Drachenköpfe und legt diese in der Drachenhöhle ab
+ * 
+ */
+public class DrachenkoederRegel extends RegelController {
+
+	@Override
+	public void setMasterController(MasterController masterController) {
+		// TODO Auto-generated method stub
+		super.setMasterController(masterController);
+	}
+
+	@Override
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List<Ziel> ziel) {
+		//quelle testen - muss drachenköder schatz sein
+		if(quelle.alsSchatz() != Schatz.DRACHENKOEDER) return false;
+		//ziele testen - müssen alle Monster sein
+		for(Ziel z : ziel) {
+			if(!z.alsWuerfel().isMonster()) return false;
+		}
+		return true;
+	}
+
+	@Override
+	public void regelAusfuehren(Quelle quelle, List<Ziel> ziel) {
+		//quelle verarbeiten
+		masterController.getSchatzController().schatzZuruecklegen(quelle.alsSchatz());
+		//ziele verarbeiten - auf Drachenkopf ändern aus DungeonListe nehmen zur Höhle hinzufügen
+
+		List<Wuerfel> dungeon = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDungeon();
+		List<Wuerfel> dragon = masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().getDrachen();
+		for(Ziel z : ziel) {
+			dungeon.remove(z.alsWuerfel());
+			masterController.getWuerfelController().wuerfelseiteErsetzen(z.alsWuerfel(), SchwarzeWuerfelseite.DRACHENKOPF);
+			dragon.add(z.alsWuerfel());
+		}
+		masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().setDungeon(dungeon);
+		masterController.getDungeonRoll().getAktuellerZustand().getAbenteuer().setDrachen(dragon);
+		
+	}
+
+}

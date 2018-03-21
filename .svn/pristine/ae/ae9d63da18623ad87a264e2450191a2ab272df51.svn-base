@@ -1,0 +1,58 @@
+package gui.heldenkartenWaehlen;
+
+import control.MasterController;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.text.Text;
+
+public class HeldenkartenWaehlenController {
+
+	MasterController masterController;
+
+	@FXML
+	private Text spieler1Text;
+
+	@FXML
+	private Text spieler2Text;
+
+	@FXML
+	private Text spieler3Text;
+
+	@FXML
+	private Text spieler4Text;
+
+	@FXML
+	private ChoiceBox<String> spieler1Box;
+
+	@FXML
+	private ChoiceBox<String> spieler2Box;
+
+	@FXML
+	private ChoiceBox<String> spieler3Box;
+
+	@FXML
+	private ChoiceBox<String> spieler4Box;
+
+	@FXML
+	private Button abbrechenButton;
+
+	@FXML
+	private Button oKButton;
+
+	void setMasterController(MasterController masterController) {
+		this.masterController = masterController;
+	}
+
+	@FXML
+	void abbrechen(ActionEvent event) {
+
+	}
+
+	@FXML
+	void ok(ActionEvent event) {
+
+	}
+
+}

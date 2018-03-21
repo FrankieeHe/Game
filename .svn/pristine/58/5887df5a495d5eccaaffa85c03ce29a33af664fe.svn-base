@@ -1,0 +1,58 @@
+package control.regeln;
+
+import java.util.List;
+
+import control.MasterController;
+import control.RegelController;
+import model.DungeonRoll;
+import model.Phase;
+import model.Quelle;
+import model.WeisseWuerfelseite;
+
+/**
+ * Regel fuer die MonsterPhase, 
+ * @author sopr102
+ *
+ */
+
+public class MonsterPhasenRegel extends RegelController {
+	private MasterController masterController;
+	private DungeonRoll dungeonRoll;
+	
+	public MonsterPhasenRegel(MasterController masterController){
+		this.masterController=masterController;
+		this.dungeonRoll = masterController.getDungeonRoll();
+	}
+	public boolean pruefeAuswahlErlaubt(Quelle quelle, List ziel) {
+		
+		if(this.dungeonRoll.getAktuellerZustand().getAbenteuer().getPhase().equals(Phase.KAMPFPHASE)){
+			
+			if( quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.CHAMPION)){
+				
+			} 
+			if( quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.KRIEGER)){
+				
+			} 
+			if( quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.PRIESTER)){
+				
+			} 
+			if( quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.ZAUBERER)){
+				
+			} 
+			if( quelle.alsWuerfel().getWeisseWuerfelseite().equals(WeisseWuerfelseite.SPRUCHROLLE)){
+				
+			} 
+
+			for(WeisseWuerfelseite w : WeisseWuerfelseite.values()){
+				if(quelle.alsWuerfel().getWeisseWuerfelseite().equals(w)){
+					
+				}
+			}
+		}
+		return false;
+	}
+
+	public void regelAusfuehren(Quelle quelle, List ziel) {
+		
+	}
+}

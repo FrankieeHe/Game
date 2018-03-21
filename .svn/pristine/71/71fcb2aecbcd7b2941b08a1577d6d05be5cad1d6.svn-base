@@ -1,0 +1,27 @@
+package control;
+
+import model.Schatz;
+
+public class SchatzController {
+	
+	private MasterController masterController;
+	/**
+	 * @author Julian
+	 * @param schatz übergibt den Schatz der in die Schatztruhe zurückgelegt werden soll
+	 * Gibt einen ausgewählten/benutzten Schatz zurück in die Schatztruhe
+	 */
+	public void schatzZuruecklegen(Schatz schatz) {
+		
+	}
+	/**
+	 * @author Julian
+	 * Zieht einen zufälligen Schatz aus der Schatzkiste, falls einer vorhanden ist. In dem Fall wird dieser dann aus der 
+	 * Truhe entfernt.
+	 * @returns null falls kein Schatz vorhanden ist
+	 * @returns Schatz den zufällig ausgewählten Schatz aus der Schatztruhe
+	 */
+	public Schatz schatzZiehen() {
+		return null;
+	}
+
+}

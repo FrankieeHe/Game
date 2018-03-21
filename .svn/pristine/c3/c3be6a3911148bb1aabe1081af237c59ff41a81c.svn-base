@@ -1,0 +1,149 @@
+package control;
+
+import model.DungeonRoll;
+import model.Spieler;
+import model.Spielertyp;
+import model.Spielzustand;
+import java.util.List;
+
+public class MasterController {
+
+	private DungeonRoll dungeonRoll;
+
+	private WuerfelController wuerfelController;
+
+	private SchatzController schatzController;
+
+	private KIController kIController;
+
+	private HighscoreController highscoreController;
+
+	private RegelController regelController;
+
+	private AbenteuerController abenteuerController;
+
+	private AuswahlController auswahlController;
+
+	private SpeicherController speicherController;
+
+	/**
+	 * Macht die letzten von einem menschlichen Spieler durchgefuehrten Zuege
+	 * rueckgaengig. Das Flag {@code highscoreRelevant} wird auf <b>false</b>
+	 * gesetzt, wodurch das aktuelle Spiel nicht mehr in die Highscore-Liste
+	 * aufgenommen werden kann.
+	 */
+	public void undo() {
+		Spielzustand as = dungeonRoll.getAktuellerZustand();
+		Spielzustand ns;
+		Spielertyp st = null;
+		do {
+			ns = as.getVorherigerSpielzustand();
+			if (!ns.equals(null)) {
+				Spieler sp = ns.aktuellerSpieler();
+				st = sp.getSpielertyp();
+			}
+		} while (!ns.equals(null) && st != Spielertyp.MENSCHLICH);
+		if (!ns.equals(null)) {
+			spielzustandSetzen(ns);
+			ns.setHighscoreRelevant(false);
+		}
+	}
+
+	/**
+	 * Stellt die zuletzt rueckgängig gemachten Spielzuege wieder her.
+	 */
+	public void redo() {
+		Spielzustand as = dungeonRoll.getAktuellerZustand();
+		Spielzustand ns;
+		Spielertyp st = null;
+		do {
+			ns = as.getNachfolgenderSpielzustand();
+			if (!ns.equals(null)) {
+				Spieler sp = ns.aktuellerSpieler();
+				st = sp.getSpielertyp();
+			}
+		} while (!ns.equals(null) && st != Spielertyp.MENSCHLICH);
+		if (!ns.equals(null)) {
+			spielzustandSetzen(ns);
+			ns.setHighscoreRelevant(false);
+		}
+	}
+
+	/**
+	 * Setzt den uebergebenen Spielzustand als den aktuellen.
+	 * 
+	 * @param zustand
+	 *            zu setzender Spielzustand
+	 * 
+	 */
+	public void spielzustandSetzen(Spielzustand zustand) {
+		dungeonRoll.setAktuellerZustand(zustand);
+	}
+
+	/**
+	 * Beendet das aktuelle Spiel
+	 */
+	public void spielBeenden() {
+
+	}
+
+	/**
+	 * Beendet das komplette Programm
+	 */
+	public void programmBeenden() {
+
+	}
+
+	/**
+	 * Startet ein neues Spiel
+	 * 
+	 * @param spieler
+	 *            Liste mit Spielern, die an neuem Spiel teilnehmen
+	 * @param rundenanzahl
+	 *            Rundenzahl des neuen Spiels
+	 */
+	public void spielStarten(List<Spieler> spieler, int rundenanzahl) {
+		Spielzustand sz = new Spielzustand();
+		sz.setSpieler(spieler);
+		sz.setMaxRunde(rundenanzahl);
+		sz.setHighscoreRelevant(true);
+		spielzustandSetzen(sz);
+
+	}
+
+	public DungeonRoll getDungeonRoll() {
+		return dungeonRoll;
+	}
+
+	public WuerfelController getWuerfelController() {
+		return wuerfelController;
+	}
+
+	public SchatzController getSchatzController() {
+		return schatzController;
+	}
+
+	public KIController getkIController() {
+		return kIController;
+	}
+
+	public HighscoreController getHighscoreController() {
+		return highscoreController;
+	}
+
+	public RegelController getRegelController() {
+		return regelController;
+	}
+
+	public AbenteuerController getAbenteuerController() {
+		return abenteuerController;
+	}
+
+	public AuswahlController getAuswahlController() {
+		return auswahlController;
+	}
+
+	public SpeicherController getSpeicherController() {
+		return speicherController;
+	}
+}

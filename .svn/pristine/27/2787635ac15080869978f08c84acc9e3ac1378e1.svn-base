@@ -1,0 +1,39 @@
+package gui.spielfeld;
+
+import control.MasterController;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+public class Main extends Application{
+
+		
+	@Override
+	public void start(Stage primaryStage) {
+		
+		MasterController masterController = new MasterController();
+		
+		FXMLLoader loader = new FXMLLoader();
+		try {
+			Parent root = loader.load(getClass().getResource("spielfeld.fxml").openStream());
+			
+			SpielfeldController spielfeldController = loader.getController();
+			spielfeldController.setMasterController(masterController);
+			
+			Scene scene = new Scene(root,1280,1020);
+			scene.getStylesheets().add(getClass().getResource("stylesheet.css").toExternalForm());
+			primaryStage.setScene(scene);
+			primaryStage.show();
+
+		} catch(Exception e) {
+			e.printStackTrace();
+			primaryStage.close();
+		}
+	}
+	
+	public static void main(String[] args) {
+		launch(args);
+	}
+}

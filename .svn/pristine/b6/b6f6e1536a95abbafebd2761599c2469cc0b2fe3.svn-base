@@ -1,0 +1,29 @@
+package control;
+
+
+public class SpeicherController {
+
+	private MasterController masterController;
+	
+	/**
+	 * Alle Spieldaten werden in einer XML-Datei gesichert. 
+	 */
+	public void spielSpeichern() {
+		
+	}
+
+	/**
+	 *  Die Daten eines Spiels werden aus einer XML-Datei geladen.
+	 */
+	public void spielLaden() {
+		
+	}
+
+	
+	/**
+	 * Das gleiche wie Spiel speichern, allerdings wird das Spiel auch geschlossen. 
+	 */
+	public void spielUnterbrechen() {
+		
+	}
+}
